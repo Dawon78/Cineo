@@ -112,6 +112,15 @@ Screen 등록 시 행/열 개수를 지정하면 그에 맞춰 Seat 레코드가
 - 인증 필요한 API에 토큰 없이 접근: 401 Unauthorized
 - 권한 부족(USER가 ADMIN 전용 API 접근): 403 Forbidden
 
+## 기술 스택 / 데이터 접근 방식 (2026-09-09 업데이트)
+
+JPA와 MyBatis를 함께 사용한다. 역할 분담 기준:
+
+- **JPA**: 단순 CRUD (예: 회원 가입/조회, 영화 등록/조회)
+- **MyBatis**: 복잡한 동적 조회, 통계 (예: 좌석 현황 검색, 조건별 상영 검색 등 — 주로 2번 이후 서브프로젝트에서 등장)
+
+`build.gradle.kts`에 `mybatis-spring-boot-starter` 의존성 추가 (기존 `spring-boot-starter-data-jpa`는 유지).
+
 ## 패키지 구조
 
 ```
@@ -122,7 +131,26 @@ com.dw.movie
 └── showtime   (Showtime 엔티티)
 ```
 
-각 패키지는 like-spring 프로젝트와 동일하게 Controller → Service → Repository → Entity 계층 구조를 따른다.
+각 기능 패키지 내부는 다음 계층으로 구성한다 (예: `auth` 패키지 기준):
+
+```
+com.dw.movie.auth
+├── Member.java                 (도메인 객체)
+├── MemberController.java       (HTTP 요청 처리)
+├── dto/                        (요청/응답 DTO)
+├── MemberService.java          (비즈니스 로직 — 구현체 하나만 두고 인터페이스는 만들지 않음. YAGNI)
+├── MemberRepository.java       (도메인 관점의 저장/조회 인터페이스)
+└── MemberRepositoryImpl.java   (Repository 구현체 — 내부에서 JPA/MyBatis를 조합)
+```
+
+**Repository 패턴**: Service는 `MemberRepository` 인터페이스만 의존하고, `MemberRepositoryImpl`이 내부적으로 Spring Data `JpaRepository`(단순 CRUD)와 MyBatis Mapper(복잡 조회)를 조합해서 구현한다. 이렇게 하면 Service 입장에서 특정 조회가 JPA로 구현됐는지 MyBatis로 구현됐는지 신경 쓸 필요가 없다.
+
+Member는 현재 복잡한 조회가 없으므로 `MemberRepositoryImpl` 내부는 JPA 위임만 있으면 된다 (MyBatis Mapper는 필요해지는 도메인부터 추가).
+
+**기존 코드 리팩터링**: 현재 `MemberRepository`가 `JpaRepository`를 직접 상속하는 방식으로 되어 있는데, 이 패턴에 맞춰 다음과 같이 정리한다.
+- `MemberJpaRepository` 신설 — `JpaRepository<Member, Long>` 상속, 실제 JPA 접근 담당
+- `MemberRepository` — 도메인 인터페이스로 재정의 (Service가 의존하는 대상)
+- `MemberRepositoryImpl` — `MemberRepository`를 구현, 내부에서 `MemberJpaRepository`에 위임
 
 ## 테스트
 

@@ -35,6 +35,8 @@ public class Member {
 
     private LocalDateTime createAt;
 
+    private String refreshToken;
+
     public Member (String email, String password, String name, String phone){
         this.email = email;
         this.password = password;

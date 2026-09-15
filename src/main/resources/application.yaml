@@ -1,6 +1,11 @@
 server:
   port: 8082
 
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-validity: 1800000    # 30분 (ms 단위)
+  refresh-token-validity: 1209600000  # 14일 (ms 단위)
+
 spring:
   application:
     name: movie
