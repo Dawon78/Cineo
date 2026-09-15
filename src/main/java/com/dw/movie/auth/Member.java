@@ -47,7 +47,9 @@ public class Member {
         this.totalSpent = 0L;
         this.points = 0L;
         this.createAt = LocalDateTime.now();
-
+    }
+    public void updateRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 
 }
