@@ -1,0 +1,379 @@
+<title>인증 기능 빌드 로그</title>
+<style>
+  :root{
+    --bg:#EDEFF2;
+    --surface:#FFFFFF;
+    --surface-2:#E4E7EC;
+    --ink:#1B2028;
+    --ink-dim:#5B626F;
+    --ink-faint:#8891A0;
+    --rule:#D7DAE0;
+    --accent:#8A5A2B;
+    --accent-soft:#F1E4D3;
+    --accent-ink:#5C3B1B;
+    --good:#2E7D5C;
+    --good-soft:#DFEEE6;
+    --info:#3B6EA5;
+    --info-soft:#E1EAF4;
+    --paused:#9C5C2E;
+    --paused-soft:#F3E4D6;
+    --code-bg:#F4F2EE;
+    --code-ink:#3A2E22;
+    --shadow: 0 1px 2px rgba(27,32,40,.04), 0 6px 20px rgba(27,32,40,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14171C;
+      --surface:#1B1F26;
+      --surface-2:#232833;
+      --ink:#E9EAED;
+      --ink-dim:#A4ABB8;
+      --ink-faint:#6B7280;
+      --rule:#2B313C;
+      --accent:#D19A5D;
+      --accent-soft:#3A2C1B;
+      --accent-ink:#EFD3AC;
+      --good:#54B98B;
+      --good-soft:#1E3229;
+      --info:#7CA6DA;
+      --info-soft:#1E2C3E;
+      --paused:#D6935A;
+      --paused-soft:#3A2A1C;
+      --code-bg:#20242B;
+      --code-ink:#D8CFC3;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14171C;
+    --surface:#1B1F26;
+    --surface-2:#232833;
+    --ink:#E9EAED;
+    --ink-dim:#A4ABB8;
+    --ink-faint:#6B7280;
+    --rule:#2B313C;
+    --accent:#D19A5D;
+    --accent-soft:#3A2C1B;
+    --accent-ink:#EFD3AC;
+    --good:#54B98B;
+    --good-soft:#1E3229;
+    --info:#7CA6DA;
+    --info-soft:#1E2C3E;
+    --paused:#D6935A;
+    --paused-soft:#3A2A1C;
+    --code-bg:#20242B;
+    --code-ink:#D8CFC3;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Source Serif 4", Georgia, "Noto Serif KR", serif;
+    line-height:1.65;
+  }
+  .mono{ font-family:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  .wrap{ max-width:760px; margin:0 auto; padding:56px 24px 96px; }
+
+  header.page{ margin-bottom:40px; }
+  .eyebrow{
+    font-family:"JetBrains Mono", monospace;
+    font-size:12.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--accent);
+    display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:7px; height:7px; border-radius:50%;
+    background:var(--accent);
+    display:inline-block;
+  }
+  h1{
+    font-family:"JetBrains Mono", monospace;
+    font-weight:700;
+    font-size:clamp(28px,4.4vw,38px);
+    line-height:1.18;
+    letter-spacing:-.01em;
+    margin:14px 0 10px;
+    text-wrap:balance;
+  }
+  .subtitle{
+    color:var(--ink-dim);
+    font-size:16.5px;
+    max-width:60ch;
+    margin:0;
+  }
+
+  .stats{
+    margin-top:28px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1px;
+    background:var(--rule);
+    border:1px solid var(--rule);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .stat{
+    background:var(--surface);
+    padding:16px 14px;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .stat .n{
+    font-family:"JetBrains Mono", monospace;
+    font-weight:700;
+    font-size:22px;
+    font-variant-numeric:tabular-nums;
+    color:var(--accent-ink);
+  }
+  .stat .l{
+    font-size:12.5px;
+    color:var(--ink-dim);
+    letter-spacing:.01em;
+  }
+  @media (max-width:600px){
+    .stats{ grid-template-columns:repeat(2,1fr); }
+  }
+
+  .timeline{
+    margin-top:48px;
+    position:relative;
+    padding-left:26px;
+    border-left:2px solid var(--rule);
+  }
+  .entry{
+    position:relative;
+    padding-bottom:40px;
+  }
+  .entry:last-child{ padding-bottom:0; }
+  .entry::before{
+    content:"";
+    position:absolute;
+    left:-32px; top:4px;
+    width:11px; height:11px;
+    border-radius:50%;
+    background:var(--surface);
+    border:2px solid var(--accent);
+  }
+  .entry[data-status="paused"]::before{ border-color:var(--paused); }
+  .entry[data-status="done"]::before{ background:var(--good); border-color:var(--good); }
+
+  .entry-head{
+    display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;
+    margin-bottom:8px;
+  }
+  .tag{
+    font-family:"JetBrains Mono", monospace;
+    font-size:11.5px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    padding:2px 8px;
+    border-radius:5px;
+    background:var(--info-soft);
+    color:var(--info);
+    white-space:nowrap;
+  }
+  .tag.build{ background:var(--accent-soft); color:var(--accent-ink); }
+  .tag.trouble{ background:var(--paused-soft); color:var(--paused); }
+  .tag.test{ background:var(--good-soft); color:var(--good); }
+
+  h2{
+    font-family:"JetBrains Mono", monospace;
+    font-size:17.5px;
+    font-weight:700;
+    margin:0;
+    letter-spacing:-.005em;
+    text-wrap:balance;
+  }
+
+  .entry p{
+    margin:8px 0;
+    color:var(--ink);
+    font-size:16px;
+  }
+  .entry p.dim{ color:var(--ink-dim); font-size:15px; }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--rule);
+    border-radius:10px;
+    padding:14px 16px;
+    margin-top:10px;
+    box-shadow:var(--shadow);
+  }
+  .card + .card{ margin-top:10px; }
+
+  code, pre{
+    font-family:"JetBrains Mono", monospace;
+  }
+  pre{
+    background:var(--code-bg);
+    color:var(--code-ink);
+    padding:12px 14px;
+    border-radius:8px;
+    overflow-x:auto;
+    font-size:13px;
+    line-height:1.55;
+    margin:10px 0 0;
+    border:1px solid var(--rule);
+  }
+  p code{
+    background:var(--code-bg);
+    color:var(--code-ink);
+    padding:1px 6px;
+    border-radius:4px;
+    font-size:.88em;
+  }
+
+  .fix{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:4px 10px;
+    font-size:14.5px;
+    margin-top:10px;
+  }
+  .fix .k{ color:var(--ink-faint); font-family:"JetBrains Mono", monospace; font-size:12px; text-transform:uppercase; letter-spacing:.04em; padding-top:2px;}
+  .fix .v{ color:var(--ink); }
+  .fix .before{ color:var(--paused); text-decoration:line-through; text-decoration-color:var(--paused); }
+  .fix .after{ color:var(--good); font-weight:600; }
+
+  ul.list{ margin:8px 0 0; padding-left:20px; }
+  ul.list li{ margin:4px 0; font-size:15.5px; }
+
+  .checks{ display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+  .check{ display:flex; align-items:center; gap:8px; font-size:14.5px; font-family:"JetBrains Mono", monospace; }
+  .check .dot{ width:8px; height:8px; border-radius:50%; background:var(--good); flex:none; }
+
+  footer.page{
+    margin-top:56px;
+    padding-top:24px;
+    border-top:1px solid var(--rule);
+    display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap;
+  }
+  footer.page .next{ font-size:14.5px; color:var(--ink-dim); }
+  footer.page .next strong{ color:var(--ink); }
+  footer.page .path{
+    font-family:"JetBrains Mono", monospace;
+    font-size:12px;
+    color:var(--ink-faint);
+  }
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+
+<div class="wrap">
+
+  <header class="page">
+    <div class="eyebrow">dawonint / seat-reservation / movie · 2026-09-15</div>
+    <h1>디버거로 관찰하고, 직접 짜서 완성한 토큰갱신·로그아웃</h1>
+    <p class="subtitle">"설계 노트 남겨줘" 요청 이후부터 지금까지의 기록. 디버거를 처음 배워서 이미 짠 코드를 눈으로 관찰하고, 그다음엔 요구사항만 받고 <code>refresh()</code>/<code>logout()</code>을 직접 작성 — 막히고, 실수 찾고, 스스로 고치는 과정까지.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="n">2</div><div class="l">직접 작성한<br>신규 API</div></div>
+      <div class="stat"><div class="n">2</div><div class="l">코드리뷰에서<br>스스로 찾은 실수</div></div>
+      <div class="stat"><div class="n">2</div><div class="l">디버거로 직접<br>관찰한 흐름</div></div>
+      <div class="stat"><div class="n">4/4</div><div class="l">최종 통합 테스트<br>전 구간 통과</div></div>
+    </div>
+  </header>
+
+  <div class="timeline">
+
+    <div class="entry" data-status="paused">
+      <div class="entry-head">
+        <span class="tag trouble">회고</span>
+        <h2>"코드가 어떻게 이렇게 되는지 모르겠다"</h2>
+      </div>
+      <p>필터 코드까지 다 짜놓은 뒤, 눈으로 읽기만 해선 실행 흐름이 상상이 안 된다는 걸 인정. 코드를 읽는 것도 훈련이 필요한 기술이라는 전제로, <strong>디버거로 실제 값을 관찰하는 법</strong>을 배우기로 함.</p>
+    </div>
+
+    <div class="entry" data-status="done">
+      <div class="entry-head">
+        <span class="tag">스킬</span>
+        <h2>IntelliJ 디버거 첫 사용</h2>
+      </div>
+      <p>브레이크포인트 + Step Over(F8)로 이미 완성해둔 <code>signup()</code>·<code>login()</code>을 한 줄씩 따라가며 직접 관찰:</p>
+      <ul class="list">
+        <li><code>encodedPassword</code>가 실제로 <code>$2a$10$...</code> 형태로 해시되는 순간</li>
+        <li><code>new Member(...)</code> 실행 직후 <code>role: USER</code>, <code>tier: BASIC</code> 등 기본값이 생성자 안에서 자동으로 채워지는 순간</li>
+        <li><code>accessToken</code>/<code>refreshToken</code> 문자열이 실제로 조립되는 순간</li>
+      </ul>
+      <p class="dim">"코드를 상상하지 않고 관찰하는" 방법을 처음으로 익힘.</p>
+    </div>
+
+    <div class="entry" data-status="done">
+      <div class="entry-head">
+        <span class="tag build">구현</span>
+        <h2><code>SecurityConfig</code>에 JWT 필터 배선</h2>
+      </div>
+      <p><code>JwtAuthenticationFilter</code>를 <code>addFilterBefore(..., UsernamePasswordAuthenticationFilter.class)</code>로 필터 체인에 끼워넣고, <code>JwtAuthenticationEntryPoint</code>를 <code>exceptionHandling()</code>에 연결해서 인증 안 된 접근이 403 대신 401로 응답하게 배선. 컴파일 통과 확인.</p>
+    </div>
+
+    <div class="entry" data-status="paused">
+      <div class="entry-head">
+        <span class="tag trouble">전환점</span>
+        <h2>"이런 거 못하면 의미가 있나"</h2>
+      </div>
+      <p>코드를 받아 적기만 하는 방식에 근본적인 의문 제기. 여기서부터 <strong>요구사항만 받고 직접 작성 → 막히면 디버깅 절차로 접근</strong>하는 방식으로 전환. 디버깅 5단계(재현 → 에러 읽기 → 격리 → 진단 → 수정)를 프레임워크로 정리.</p>
+    </div>
+
+    <div class="entry" data-status="done">
+      <div class="entry-head">
+        <span class="tag build">직접 작성</span>
+        <h2><code>refresh()</code> — 막히고, 다시 시도하고</h2>
+      </div>
+      <p>메서드 시그니처 문법부터 막힘(<code>public RefreshRequest { return; }</code>) → <code>login()</code>과 대조하며 반환타입·파라미터 자리 스스로 교정 → 본문 채우다 <code>request.getRefreshToken()</code> 값을 변수에 저장 안 하고 버리는 실수 지적받아 수정 → 결국 막혀서 전체 코드를 받아 타이핑, 컴파일 통과.</p>
+      <p class="dim">이번엔 "빈 채로 못 채웠다"는 결과보다 어디서 막혔는지 아는 것 자체가 소득 — 다음엔 이 지점부터 다시 시도 가능.</p>
+    </div>
+
+    <div class="entry" data-status="done">
+      <div class="entry-head">
+        <span class="tag build">직접 작성</span>
+        <h2><code>logout()</code> — 이번엔 스스로, 실수도 스스로 발견</h2>
+      </div>
+      <p>요구사항만 보고 <code>refresh()</code> 패턴 재사용해서 직접 완성. 코드리뷰에서 두 가지를 스스로 고침:</p>
+      <div class="card">
+        <div class="fix">
+          <span class="k">이름</span><span class="v"><span class="before">Logout(...)</span> → <span class="after">logout(...)</span> — 자바 메서드는 소문자 camelCase</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="fix">
+          <span class="k">예외</span><span class="v"><span class="before">InvalidCredentialsException</span> → <span class="after">InvalidTokenException</span> — 로그인 실패(자격증명 문제)와 토큰 자체 문제는 의미가 다른 예외로 구분해야 한다는 걸 다시 확인</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="entry" data-status="done">
+      <div class="entry-head">
+        <span class="tag build">구현</span>
+        <h2>컨트롤러 엔드포인트 연결</h2>
+      </div>
+      <p><code>MemberController</code>에 <code>/refresh</code>, <code>/logout</code> 추가. <code>/logout</code>은 요청 본문 없이 <code>@AuthenticationPrincipal Long memberId</code>로 필터가 <code>SecurityContextHolder</code>에 심어둔 인증 정보를 그대로 꺼내 씀 — 필터·컨트롤러·SecurityContext가 실제로 연결되는 지점.</p>
+    </div>
+
+    <div class="entry" data-status="done">
+      <div class="entry-head">
+        <span class="tag test">테스트</span>
+        <h2>전체 시나리오 최종 통과</h2>
+      </div>
+      <div class="checks">
+        <div class="check"><span class="dot"></span>signup → login → refresh (새 accessToken 발급)</div>
+        <div class="check"><span class="dot"></span>logout (Authorization 헤더로 필터 인증 통과) → 204</div>
+        <div class="check"><span class="dot"></span>로그아웃 후 같은 refreshToken 재사용 시도 → 401 (DB에서 무효화 확인)</div>
+      </div>
+      <p class="dim">서브프로젝트 1번(도메인 모델 + 인증) API 4개 전부 구현 완료.</p>
+    </div>
+
+  </div>
+
+  <footer class="page">
+    <div class="next">다음: <strong>서브프로젝트 2 — 관리자 기능 + TMDB 연동</strong></div>
+    <div class="path mono">docs/superpowers/specs/2026-09-15-auth-implementation-notes.md</div>
+  </footer>
+
+</div>

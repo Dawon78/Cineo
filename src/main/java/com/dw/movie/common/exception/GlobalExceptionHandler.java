@@ -22,4 +22,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleInvalidToken(InvalidTokenException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
     }
+
+    @ExceptionHandler(DuplicateTmdbIdException.class)
+    public ResponseEntity<String> handleDuplicateTmdbId(DuplicateTmdbIdException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
+    @ExceptionHandler(TmdbMovieNotFoundException.class)
+    public ResponseEntity<String> handleTmdbMovieNotFound(TmdbMovieNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
 }
