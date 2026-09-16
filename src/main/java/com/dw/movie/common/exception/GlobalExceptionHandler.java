@@ -36,4 +36,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleMovieNotFound(MovieNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
+    @ExceptionHandler(ScreenNotFoundException.class)
+    public ResponseEntity<String> handleScreenNotFound(ScreenNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
 }
