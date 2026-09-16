@@ -32,4 +32,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleTmdbMovieNotFound(TmdbMovieNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
+    @ExceptionHandler(MovieNotFoundException.class)
+    public ResponseEntity<String> handleMovieNotFound(MovieNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
 }

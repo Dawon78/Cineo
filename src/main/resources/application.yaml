@@ -13,7 +13,7 @@ spring:
   application:
     name: movie
   datasource:
-    url: jdbc:mysql://localhost:3306/movie
+    url: jdbc:postgresql://localhost:5432/movie
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD}
   jpa:
