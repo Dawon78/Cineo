@@ -57,4 +57,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleSeatHoldExpired(SeatHoldExpiredException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
+    @ExceptionHandler(ShowtimeNotFoundException.class)
+    public ResponseEntity<String> ShowtimeNotFoundException(ShowtimeNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
 }
