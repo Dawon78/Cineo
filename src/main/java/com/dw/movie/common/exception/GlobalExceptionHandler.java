@@ -58,7 +58,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
     @ExceptionHandler(ShowtimeNotFoundException.class)
-    public ResponseEntity<String> ShowtimeNotFoundException(ShowtimeNotFoundException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    public ResponseEntity<String> handleShowtimeNotFound(ShowtimeNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+    @ExceptionHandler(ShowtimeAlreadyStartedException.class)
+    public ResponseEntity<String> handleShowtimeAlreadyStarted(ShowtimeAlreadyStartedException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 }
