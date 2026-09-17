@@ -32,12 +32,29 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleTmdbMovieNotFound(TmdbMovieNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
+
     @ExceptionHandler(MovieNotFoundException.class)
     public ResponseEntity<String> handleMovieNotFound(MovieNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
+
     @ExceptionHandler(ScreenNotFoundException.class)
     public ResponseEntity<String> handleScreenNotFound(ScreenNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    @ExceptionHandler(SeatAlreadyHeldException.class)
+    public ResponseEntity<String> handleSeatAlreadyHeld(SeatAlreadyHeldException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
+    @ExceptionHandler(NotSeatHolderException.class)
+    public ResponseEntity<String> handleNotSeatHolder(NotSeatHolderException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+    }
+
+    @ExceptionHandler(SeatHoldExpiredException.class)
+    public ResponseEntity<String> handleSeatHoldExpired(SeatHoldExpiredException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 }
