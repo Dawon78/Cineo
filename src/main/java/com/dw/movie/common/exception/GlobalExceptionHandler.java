@@ -57,16 +57,34 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleSeatHoldExpired(SeatHoldExpiredException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
+
     @ExceptionHandler(ShowtimeNotFoundException.class)
     public ResponseEntity<String> handleShowtimeNotFound(ShowtimeNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
+
     @ExceptionHandler(ShowtimeAlreadyStartedException.class)
     public ResponseEntity<String> handleShowtimeAlreadyStarted(ShowtimeAlreadyStartedException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
+
     @ExceptionHandler(MemberNotFoundException.class)
     public ResponseEntity<String> MemberNotFoundException(MemberNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    @ExceptionHandler(NotReservationOwnerException.class)
+    public ResponseEntity<String> NotReservationOwnerException(NotReservationOwnerException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+    }
+
+    @ExceptionHandler(ReservationAlreadyCancelledException.class)
+    public ResponseEntity<String> ReservationAlreadyCancelledException(ReservationAlreadyCancelledException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
+    @ExceptionHandler(ReservationNotFoundException.class)
+    public ResponseEntity<String> ReservationNotFoundException(ReservationNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 }

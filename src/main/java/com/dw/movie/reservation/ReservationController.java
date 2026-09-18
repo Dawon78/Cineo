@@ -45,4 +45,10 @@ public class ReservationController {
         List<Reservation> reservations = reservationService.getMyReservations(memberId);
                 return ResponseEntity.ok(reservations.stream().map(this::toResponse).toList());
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteReservation(@PathVariable Long id, @AuthenticationPrincipal Long memberId){
+        reservationService.cancel(memberId, id);
+        return ResponseEntity.noContent().build();
+    }
 }

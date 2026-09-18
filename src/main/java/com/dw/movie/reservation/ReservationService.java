@@ -2,8 +2,7 @@ package com.dw.movie.reservation;
 
 import com.dw.movie.auth.Member;
 import com.dw.movie.auth.MemberRepository;
-import com.dw.movie.common.exception.MemberNotFoundException;
-import com.dw.movie.common.exception.ShowtimeNotFoundException;
+import com.dw.movie.common.exception.*;
 import com.dw.movie.screen.Seat;
 import com.dw.movie.screen.SeatRepository;
 import com.dw.movie.showtime.Showtime;
@@ -58,5 +57,20 @@ public class ReservationService {
 
     public List<Reservation> getMyReservations(Long memberId) {
         return reservationRepository.findByMemberId(memberId);
+    }
+
+    @Transactional
+    public void cancel(Long memberId, Long reservationId) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new ReservationNotFoundException("해당 예약을 찾을 수 없습니다."));
+
+        if (!reservation.getMember().getId().equals(memberId)) {
+            throw new NotReservationOwnerException("본인의 예약이 아닙니다.");
+        }
+        if (reservation.getStatus() == ReservationStatus.CANCELLED) {
+            throw new ReservationAlreadyCancelledException("이미 취소된 예약입니다.");
+        }
+
+        reservation.cancel();
     }
 }
