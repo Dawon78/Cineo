@@ -44,4 +44,12 @@ public class SeatController {
         seatHoldService.hold(showtimeId, request.getSeatIds(), memberId);
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("/{showtimeId}/seats/hold")
+    public ResponseEntity<Void> deleteSeats(@PathVariable Long showtimeId, @RequestBody SeatHoldRequest request,
+                                            @AuthenticationPrincipal Long memberId) {
+        seatHoldService.release(showtimeId, request.getSeatIds(), memberId);
+        return ResponseEntity.ok().build();
+
+    }
 }

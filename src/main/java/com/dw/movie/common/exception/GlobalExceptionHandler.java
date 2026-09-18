@@ -65,4 +65,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleShowtimeAlreadyStarted(ShowtimeAlreadyStartedException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
+    @ExceptionHandler(MemberNotFoundException.class)
+    public ResponseEntity<String> MemberNotFoundException(MemberNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
 }
