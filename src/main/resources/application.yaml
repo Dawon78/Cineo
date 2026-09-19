@@ -9,6 +9,10 @@ jwt:
 tmdb:
   api-key: ${TMDB_API_KEY}
 
+portone:
+  api-key: ${PORTONE_API_KEY}
+  api-secret: ${PORTONE_API_SECRET}
+
 spring:
   application:
     name: movie
