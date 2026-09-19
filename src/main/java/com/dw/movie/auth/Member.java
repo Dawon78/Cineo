@@ -52,4 +52,8 @@ public class Member {
         this.refreshToken = refreshToken;
     }
 
+    public void addSpent(long amount){
+        this.totalSpent += amount;
+    }
+
 }

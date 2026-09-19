@@ -31,6 +31,8 @@ public class Reservation {
     private Long totalPrice;
     private LocalDateTime createdAt;
     private LocalDateTime canceledAt;
+    private String impUid;
+    private Long paidAmount;
 
     public Reservation(Member member, Showtime showtime, Long totalPrice){
         this.member = member;
@@ -54,5 +56,10 @@ public class Reservation {
 
     public void applyTotalPrice(long totalPrice) {
         this.totalPrice = totalPrice;
+    }
+
+    public void applyPayment(String impUid, Long paidAmount) {
+        this.impUid = impUid;
+        this.paidAmount = paidAmount;
     }
 }

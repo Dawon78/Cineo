@@ -42,4 +42,14 @@ class ReservationTest {
         assertEquals(13000L, reservationSeat.getPrice());
         assertEquals(seat, reservationSeat.getSeat());
     }
+
+    @Test
+    void applyPayment_호출하면_impUid와_결제금액이_저장된다() {
+        Reservation reservation = new Reservation(new Member(), new Showtime(), 15000L);
+
+        reservation.applyPayment("imp_123456789", 15000L);
+
+        assertEquals("imp_123456789", reservation.getImpUid());
+        assertEquals(15000L, reservation.getPaidAmount());
+    }
 }
