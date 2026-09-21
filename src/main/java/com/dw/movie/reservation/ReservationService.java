@@ -3,6 +3,8 @@ package com.dw.movie.reservation;
 import com.dw.movie.auth.Member;
 import com.dw.movie.auth.MemberRepository;
 import com.dw.movie.common.exception.*;
+import com.dw.movie.payment.PaymentVerificationFailedException;
+import com.dw.movie.payment.PortOneClient;
 import com.dw.movie.screen.Seat;
 import com.dw.movie.screen.SeatRepository;
 import com.dw.movie.showtime.Showtime;
@@ -20,18 +22,21 @@ public class ReservationService {
     private final SeatRepository seatRepository;
     private final MemberRepository memberRepository;
     private final SeatHoldService seatHoldService;
+    private final PortOneClient portOneClient;
 
     public ReservationService(ReservationRepository reservationRepository, ShowtimeRepository showtimeRepository,
-                              SeatRepository seatRepository, MemberRepository memberRepository, SeatHoldService seatHoldService) {
+                              SeatRepository seatRepository, MemberRepository memberRepository, SeatHoldService seatHoldService,
+                              PortOneClient portOneClient) {
         this.reservationRepository = reservationRepository;
         this.showtimeRepository = showtimeRepository;
         this.seatRepository = seatRepository;
         this.memberRepository = memberRepository;
         this.seatHoldService = seatHoldService;
+        this.portOneClient = portOneClient;
     }
 
     @Transactional
-    public Reservation confirm(Long memberId, Long showtimeId, List<Long> seatIds) {
+    public Reservation confirm(Long memberId, Long showtimeId, List<Long> seatIds, String impUid) {
         seatHoldService.validateHolder(showtimeId, seatIds, memberId);
 
         Member member = memberRepository.findById(memberId)
@@ -41,16 +46,29 @@ public class ReservationService {
         List<Seat> seats = seatRepository.findAllById(seatIds);
 
         long totalPrice = 0L;
+        for (Seat seat : seats) {
+            totalPrice += SeatPriceCalculator.calculate(showtime.getBasePrice(), seat.getGrade(), showtime.getFormat());
+        }
+
+        PortOneClient.PaymentInfo paymentInfo = portOneClient.getPaymentInfo(impUid);
+        if (!"paid".equals(paymentInfo.status())) {
+            throw new PaymentVerificationFailedException("결제가 완료되지 않았습니다: " + impUid);
+        }
+        if (!Long.valueOf(totalPrice).equals(paymentInfo.amount())) {
+            throw new PaymentVerificationFailedException("결제 금액이 일치하지 않습니다. 예상: " + totalPrice + ", 실제: " + paymentInfo.amount());
+        }
+
         Reservation reservation = new Reservation(member, showtime, 0L);
         for (Seat seat : seats) {
             long price = SeatPriceCalculator.calculate(showtime.getBasePrice(), seat.getGrade(), showtime.getFormat());
-            totalPrice += price;
             reservation.addSeat(seat, price);
         }
         reservation.applyTotalPrice(totalPrice);
+        reservation.applyPayment(impUid, paymentInfo.amount());
 
         Reservation saved = reservationRepository.save(reservation);
         seatHoldService.release(showtimeId, seatIds, memberId);
+        member.addSpent(totalPrice);
 
         return saved;
     }

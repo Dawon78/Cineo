@@ -8,4 +8,6 @@ import java.util.List;
 public class ReservationConfirmRequest {
     private Long showtimeId;
     private List<Long> seatIds;
+
+    private String impUid;
 }

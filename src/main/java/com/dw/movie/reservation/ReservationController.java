@@ -24,7 +24,7 @@ public class ReservationController {
                                                        @AuthenticationPrincipal Long memberId)
     {
         Reservation reservation = reservationService.confirm(memberId, request.getShowtimeId(),
-                request.getSeatIds());
+                request.getSeatIds(), request.getImpUid());
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(reservation));
     }
 
@@ -43,7 +43,7 @@ public class ReservationController {
     @GetMapping("/me")
     public ResponseEntity<List<ReservationResponse>> getMyReservations(@AuthenticationPrincipal Long memberId){
         List<Reservation> reservations = reservationService.getMyReservations(memberId);
-                return ResponseEntity.ok(reservations.stream().map(this::toResponse).toList());
+        return ResponseEntity.ok(reservations.stream().map(this::toResponse).toList());
     }
 
     @DeleteMapping("/{id}")
