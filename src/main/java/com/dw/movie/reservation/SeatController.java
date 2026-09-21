@@ -3,6 +3,7 @@ package com.dw.movie.reservation;
 import com.dw.movie.common.exception.ShowtimeAlreadyStartedException;
 import com.dw.movie.common.exception.ShowtimeNotFoundException;
 import com.dw.movie.reservation.dto.SeatHoldRequest;
+import com.dw.movie.reservation.dto.SeatPriceResponse;
 import com.dw.movie.reservation.dto.SeatStatusResponse;
 import com.dw.movie.showtime.Showtime;
 import com.dw.movie.showtime.ShowtimeRepository;
@@ -51,5 +52,12 @@ public class SeatController {
         seatHoldService.release(showtimeId, request.getSeatIds(), memberId);
         return ResponseEntity.ok().build();
 
+    }
+
+    @GetMapping("/{showtimeId}/seats/price")
+    public ResponseEntity<SeatPriceResponse> getPrice(@PathVariable Long showtimeId,
+                                                      @RequestParam List<Long> seatIds) {
+        Long totalPrice = seatQueryService.calculateTotalPrice(showtimeId, seatIds);
+        return ResponseEntity.ok(new SeatPriceResponse(totalPrice));
     }
 }

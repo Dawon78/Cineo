@@ -62,4 +62,16 @@ public class SeatQueryService {
         }
         return SeatStatus.AVAILABLE;
     }
-}
+
+    public Long calculateTotalPrice(Long showtimeId, List<Long> seatIds){
+        Showtime showtime = showtimeRepository.findById(showtimeId)
+                .orElseThrow(()-> new ShowtimeNotFoundException("해당 상영시간표를 찾을 수 없습니다."));
+        List<Seat> seats = seatRepository.findAllById(seatIds);
+
+        long totalPrice = 0L;
+        for (Seat seat : seats) {
+            totalPrice += SeatPriceCalculator.calculate(showtime.getBasePrice(), seat.getGrade(), showtime.getFormat());
+        }
+            return totalPrice;
+        }
+    }
