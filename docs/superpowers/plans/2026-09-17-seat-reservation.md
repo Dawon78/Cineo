@@ -90,8 +90,8 @@ git commit -m "chore: Redis 의존성 및 로컬 연결 설정 추가"
 ```java
 package com.dw.movie.reservation;
 
-import com.dw.movie.screen.SeatGrade;
-import com.dw.movie.showtime.ShowtimeFormat;
+import com.dw.movie.screen.entity.SeatGrade;
+import com.dw.movie.showtime.entity.ShowtimeFormat;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -128,8 +128,8 @@ Expected: FAIL — `SeatPriceCalculator` 클래스가 없어서 컴파일 에러
 ```java
 package com.dw.movie.reservation;
 
-import com.dw.movie.screen.SeatGrade;
-import com.dw.movie.showtime.ShowtimeFormat;
+import com.dw.movie.screen.entity.SeatGrade;
+import com.dw.movie.showtime.entity.ShowtimeFormat;
 
 public class SeatPriceCalculator {
 
@@ -180,7 +180,7 @@ git commit -m "feat: 좌석 가격 계산 유틸(SeatPriceCalculator) 추가"
 - Test: `src/test/java/com/dw/movie/reservation/ReservationTest.java`
 
 **Interfaces:**
-- Consumes: `Member`(`com.dw.movie.auth.Member`), `Showtime`(`com.dw.movie.showtime.Showtime`), `Seat`(`com.dw.movie.screen.Seat`) — 이미 존재하는 엔티티
+- Consumes: `Member`(`com.dw.movie.auth.entity.Member`), `Showtime`(`com.dw.movie.showtime.entity.Showtime`), `Seat`(`com.dw.movie.screen.entity.Seat`) — 이미 존재하는 엔티티
 - Produces: `Reservation(Member member, Showtime showtime, Long totalPrice)` 생성자, `Reservation.cancel()`, `ReservationSeat(Reservation reservation, Seat seat, Long price)` 생성자 — Task 9~11에서 사용
 
 - [ ] **Step 1: Enum 2개 작성**
@@ -206,12 +206,12 @@ public enum SeatStatus {
 ```java
 package com.dw.movie.reservation;
 
-import com.dw.movie.auth.Member;
-import com.dw.movie.screen.Screen;
-import com.dw.movie.screen.Seat;
-import com.dw.movie.screen.SeatGrade;
-import com.dw.movie.showtime.Showtime;
-import com.dw.movie.showtime.ShowtimeFormat;
+import com.dw.movie.auth.entity.Member;
+import com.dw.movie.screen.entity.Screen;
+import com.dw.movie.screen.entity.Seat;
+import com.dw.movie.screen.entity.SeatGrade;
+import com.dw.movie.showtime.entity.Showtime;
+import com.dw.movie.showtime.entity.ShowtimeFormat;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -266,8 +266,8 @@ Expected: FAIL — `Reservation`, `ReservationSeat` 클래스가 없어서 컴�
 ```java
 package com.dw.movie.reservation;
 
-import com.dw.movie.auth.Member;
-import com.dw.movie.showtime.Showtime;
+import com.dw.movie.auth.entity.Member;
+import com.dw.movie.showtime.entity.Showtime;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -316,7 +316,7 @@ public class Reservation {
 ```java
 package com.dw.movie.reservation;
 
-import com.dw.movie.screen.Seat;
+import com.dw.movie.screen.entity.Seat;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -710,14 +710,14 @@ git commit -m "feat: 좌석 선점 취소 API 추가"
 ```java
 package com.dw.movie.reservation;
 
-import com.dw.movie.auth.Member;
-import com.dw.movie.auth.MemberRepository;
+import com.dw.movie.auth.entity.Member;
+import com.dw.movie.auth.dto.repository.MemberRepository;
 import com.dw.movie.common.exception.MemberNotFoundException;
 import com.dw.movie.common.exception.ShowtimeNotFoundException;
-import com.dw.movie.screen.Seat;
-import com.dw.movie.screen.SeatRepository;
-import com.dw.movie.showtime.Showtime;
-import com.dw.movie.showtime.ShowtimeRepository;
+import com.dw.movie.screen.entity.Seat;
+import com.dw.movie.screen.repository.SeatRepository;
+import com.dw.movie.showtime.entity.Showtime;
+import com.dw.movie.showtime.repository.ShowtimeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -782,7 +782,7 @@ public class ReservationService {
     @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL)
     private List<ReservationSeat> seats = new java.util.ArrayList<>();
 
-    public void addSeat(com.dw.movie.screen.Seat seat, long price) {
+    public void addSeat(com.dw.movie.screen.entity.Seat seat, long price) {
         this.seats.add(new ReservationSeat(this, seat, price));
     }
 
