@@ -1,7 +1,8 @@
 package com.dw.movie.reservation;
 
-import com.dw.movie.screen.SeatGrade;
-import com.dw.movie.showtime.ShowtimeFormat;
+import com.dw.movie.reservation.dto.SeatPriceCalculator;
+import com.dw.movie.screen.entity.SeatGrade;
+import com.dw.movie.showtime.entity.ShowtimeFormat;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

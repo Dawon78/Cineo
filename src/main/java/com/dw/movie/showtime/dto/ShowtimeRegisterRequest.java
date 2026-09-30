@@ -1,6 +1,6 @@
 package com.dw.movie.showtime.dto;
 
-import com.dw.movie.showtime.ShowtimeFormat;
+import com.dw.movie.showtime.entity.ShowtimeFormat;
 import lombok.Getter;
 
 import java.time.LocalDateTime;

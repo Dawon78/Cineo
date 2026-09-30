@@ -1,7 +1,7 @@
 package com.dw.movie.reservation.dto;
 
-import com.dw.movie.reservation.SeatStatus;
-import com.dw.movie.screen.SeatGrade;
+import com.dw.movie.reservation.entity.SeatStatus;
+import com.dw.movie.screen.entity.SeatGrade;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

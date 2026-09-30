@@ -1,5 +1,6 @@
 package com.dw.movie.auth;
 
+import com.dw.movie.auth.entity.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;

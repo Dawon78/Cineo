@@ -1,5 +1,8 @@
 package com.dw.movie.common.exception;
 
+import com.dw.movie.payment.PaymentVerificationFailedException;
+import com.dw.movie.payment.PortOneApiException;
+import com.dw.movie.payment.RefundFailedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -86,5 +89,20 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ReservationNotFoundException.class)
     public ResponseEntity<String> ReservationNotFoundException(ReservationNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    @ExceptionHandler(PaymentVerificationFailedException.class)
+    public ResponseEntity<String> PaymentVerificationFailedException(PaymentVerificationFailedException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
+    @ExceptionHandler(RefundFailedException.class)
+    public ResponseEntity<String> RefundFailedException(RefundFailedException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
+
+    @ExceptionHandler(PortOneApiException.class)
+    public ResponseEntity<String> PortOneApiException(PortOneApiException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
 }

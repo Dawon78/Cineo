@@ -1,10 +1,13 @@
 package com.dw.movie.reservation;
 
-import com.dw.movie.auth.Member;
-import com.dw.movie.screen.Screen;
-import com.dw.movie.screen.Seat;
-import com.dw.movie.screen.SeatGrade;
-import com.dw.movie.showtime.Showtime;
+import com.dw.movie.auth.entity.Member;
+import com.dw.movie.reservation.entity.Reservation;
+import com.dw.movie.reservation.entity.ReservationSeat;
+import com.dw.movie.reservation.entity.ReservationStatus;
+import com.dw.movie.screen.entity.Screen;
+import com.dw.movie.screen.entity.Seat;
+import com.dw.movie.screen.entity.SeatGrade;
+import com.dw.movie.showtime.entity.Showtime;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

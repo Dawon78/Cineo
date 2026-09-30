@@ -1,4 +1,4 @@
-package com.dw.movie.common.exception;
+package com.dw.movie.payment;
 
 public class RefundFailedException extends RuntimeException{
     public RefundFailedException(String message){

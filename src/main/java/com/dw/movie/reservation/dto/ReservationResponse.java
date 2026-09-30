@@ -1,6 +1,6 @@
 package com.dw.movie.reservation.dto;
 
-import com.dw.movie.reservation.ReservationStatus;
+import com.dw.movie.reservation.entity.ReservationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
