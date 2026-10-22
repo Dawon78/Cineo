@@ -9,6 +9,9 @@ import com.dw.movie.reservation.dto.SeatPriceResponse;
 import com.dw.movie.reservation.dto.SeatStatusResponse;
 import com.dw.movie.showtime.entity.Showtime;
 import com.dw.movie.showtime.repository.ShowtimeRepository;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -36,7 +39,7 @@ public class SeatController {
     }
 
     @PostMapping("/{showtimeId}/seats/hold")
-    public ResponseEntity<Void> holdSeats(@PathVariable Long showtimeId, @RequestBody SeatHoldRequest request,
+    public ResponseEntity<Void> holdSeats(@PathVariable Long showtimeId, @Valid @RequestBody SeatHoldRequest request,
                                           @AuthenticationPrincipal Long memberId) {
         Showtime showtime = showtimeRepository.findById(showtimeId)
                 .orElseThrow(() -> new ShowtimeNotFoundException("해당 상영시간표를 찾을 수 없습니다."));
@@ -44,12 +47,13 @@ public class SeatController {
             throw new ShowtimeAlreadyStartedException("이미 시작된 상영시간표입니다.");
         }
 
+        seatQueryService.validateSelectable(showtime, request.getSeatIds());
         seatHoldService.hold(showtimeId, request.getSeatIds(), memberId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{showtimeId}/seats/hold")
-    public ResponseEntity<Void> deleteSeats(@PathVariable Long showtimeId, @RequestBody SeatHoldRequest request,
+    public ResponseEntity<Void> deleteSeats(@PathVariable Long showtimeId, @Valid @RequestBody SeatHoldRequest request,
                                             @AuthenticationPrincipal Long memberId) {
         seatHoldService.release(showtimeId, request.getSeatIds(), memberId);
         return ResponseEntity.ok().build();
@@ -58,7 +62,7 @@ public class SeatController {
 
     @GetMapping("/{showtimeId}/seats/price")
     public ResponseEntity<SeatPriceResponse> getPrice(@PathVariable Long showtimeId,
-                                                      @RequestParam List<Long> seatIds) {
+                                                      @RequestParam @NotEmpty @Size(max = 10) List<Long> seatIds) {
         Long totalPrice = seatQueryService.calculateTotalPrice(showtimeId, seatIds);
         return ResponseEntity.ok(new SeatPriceResponse(totalPrice));
     }

@@ -16,6 +16,7 @@ import com.dw.movie.showtime.repository.ShowtimeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -27,27 +28,37 @@ public class ReservationService {
     private final MemberRepository memberRepository;
     private final SeatHoldService seatHoldService;
     private final PortOneClient portOneClient;
+    private final SeatQueryService seatQueryService;
 
     public ReservationService(ReservationRepository reservationRepository, ShowtimeRepository showtimeRepository,
                               SeatRepository seatRepository, MemberRepository memberRepository, SeatHoldService seatHoldService,
-                              PortOneClient portOneClient) {
+                              PortOneClient portOneClient, SeatQueryService seatQueryService) {
         this.reservationRepository = reservationRepository;
         this.showtimeRepository = showtimeRepository;
         this.seatRepository = seatRepository;
         this.memberRepository = memberRepository;
         this.seatHoldService = seatHoldService;
         this.portOneClient = portOneClient;
+        this.seatQueryService = seatQueryService;
     }
 
     @Transactional
     public Reservation confirm(Long memberId, Long showtimeId, List<Long> seatIds, String impUid) {
+        Showtime showtime = showtimeRepository.findByIdForUpdate(showtimeId)
+                .orElseThrow(() -> new ShowtimeNotFoundException("해당 상영시간표를 찾을 수 없습니다."));
+        if (!showtime.getStartTime().isAfter(LocalDateTime.now())) {
+            throw new ShowtimeAlreadyStartedException("이미 시작된 상영시간표입니다.");
+        }
+
         seatHoldService.validateHolder(showtimeId, seatIds, memberId);
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberNotFoundException("해당 회원을 찾을 수 없습니다."));
-        Showtime showtime = showtimeRepository.findById(showtimeId)
-                .orElseThrow(() -> new ShowtimeNotFoundException("해당 상영시간표를 찾을 수 없습니다."));
-        List<Seat> seats = seatRepository.findAllById(seatIds);
+        List<Seat> seats = seatQueryService.validateSelectable(showtime, seatIds);
+
+        if (reservationRepository.existsByImpUid(impUid)) {
+            throw new PaymentVerificationFailedException("이미 사용된 결제입니다: " + impUid);
+        }
 
         long totalPrice = 0L;
         for (Seat seat : seats) {
@@ -59,7 +70,7 @@ public class ReservationService {
             throw new PaymentVerificationFailedException("결제가 완료되지 않았습니다: " + impUid);
         }
         if (!Long.valueOf(totalPrice).equals(paymentInfo.amount())) {
-            throw new PaymentVerificationFailedException("결제 금액이 일치하지 않습니다. 예상: " + totalPrice + ", 실제: " + paymentInfo.amount());
+            throw new PaymentVerificationFailedException("결제 금액이 일치하지 않습니다.");
         }
 
         Reservation reservation = new Reservation(member, showtime, 0L);
@@ -93,7 +104,12 @@ public class ReservationService {
             throw new ReservationAlreadyCancelledException("이미 취소된 예약입니다.");
         }
 
+        if (!reservation.getShowtime().getStartTime().isAfter(LocalDateTime.now())) {
+            throw new ShowtimeAlreadyStartedException("이미 시작된 상영은 취소할 수 없습니다.");
+        }
+
         portOneClient.cancelPayment(reservation.getImpUid(), "고객 예약 취소");
         reservation.cancel();
+        reservation.getMember().subtractSpent(reservation.getTotalPrice());
     }
 }

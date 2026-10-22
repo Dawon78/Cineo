@@ -35,6 +35,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .claim("memberId", memberId)
                 .claim("role", role.name())
+                .claim("type", "access")
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(key)
@@ -47,6 +48,7 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .claim("memberId", memberId)
+                .claim("type", "refresh")
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(key)
@@ -73,6 +75,16 @@ public class JwtTokenProvider {
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
+    }
+
+    public boolean isAccessToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        return "access".equals(claims.get("type", String.class));
     }
 
     public String getRole(String token) {

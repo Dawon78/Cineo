@@ -4,6 +4,7 @@ import com.dw.movie.showtime.service.ShowTimeService;
 import com.dw.movie.showtime.dto.ShowtimeRegisterRequest;
 import com.dw.movie.showtime.dto.ShowtimeResponse;
 import com.dw.movie.showtime.entity.Showtime;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,7 +24,7 @@ public class ShowtimeController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<ShowtimeResponse> register(@RequestBody ShowtimeRegisterRequest request) {
+    public ResponseEntity<ShowtimeResponse> register(@Valid @RequestBody ShowtimeRegisterRequest request) {
         Showtime showtime = showTimeService.createShowtime(
                 request.getMovieId(),
                 request.getScreenId(),

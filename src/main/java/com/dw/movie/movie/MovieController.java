@@ -2,6 +2,7 @@ package com.dw.movie.movie;
 
 import com.dw.movie.movie.dto.MovieRegisterRequest;
 import com.dw.movie.movie.dto.MovieResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,7 +23,7 @@ public class MovieController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<MovieResponse> register(@RequestBody MovieRegisterRequest request) {
+    public ResponseEntity<MovieResponse> register(@Valid @RequestBody MovieRegisterRequest request) {
         Movie movie = movieService.registerMovie(request.getTmdbId());
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(movie));
     }

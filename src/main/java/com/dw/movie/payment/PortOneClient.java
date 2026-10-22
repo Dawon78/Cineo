@@ -3,9 +3,13 @@ package com.dw.movie.payment;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+
+import java.net.http.HttpClient;
+import java.time.Duration;
 
 @Component
 public class PortOneClient {
@@ -17,7 +21,13 @@ public class PortOneClient {
     public PortOneClient(@Value("${portone.api-key}") String apiKey, @Value("${portone.api-secret}") String apiSecret) {
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
-        this.restClient = RestClient.create("https://api.iamport.kr");
+        HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
+        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
+        requestFactory.setReadTimeout(Duration.ofSeconds(5));
+        this.restClient = RestClient.builder()
+                .baseUrl("https://api.iamport.kr")
+                .requestFactory(requestFactory)
+                .build();
     }
 
     public PaymentInfo getPaymentInfo(String impUid) {

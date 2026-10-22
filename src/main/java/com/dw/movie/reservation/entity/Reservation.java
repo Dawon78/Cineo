@@ -31,6 +31,7 @@ public class Reservation {
     private Long totalPrice;
     private LocalDateTime createdAt;
     private LocalDateTime canceledAt;
+    @Column(unique = true)
     private String impUid;
     private Long paidAmount;
 
