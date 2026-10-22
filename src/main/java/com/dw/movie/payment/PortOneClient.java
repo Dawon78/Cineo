@@ -41,6 +41,26 @@ public class PortOneClient {
         return response.response();
     }
 
+    public void cancelPayment(String impUid, String reason) {
+        String accessToken = getAccessToken();
+
+        PaymentApiResponse response;
+        try {
+            response = restClient.post()
+                    .uri("/payments/cancel")
+                    .header("Authorization", accessToken)
+                    .body(new CancelRequest(impUid, reason))
+                    .retrieve()
+                    .body(PaymentApiResponse.class);
+        } catch (RestClientException e) {
+            throw new RefundFailedException("포트원 환불 요청에 실패했습니다.");
+        }
+
+        if (response == null || response.code() != 0) {
+            throw new RefundFailedException("환불에 실패했습니다: " + impUid);
+        }
+    }
+
     private String getAccessToken() {
         TokenRequest request = new TokenRequest(apiKey, apiSecret);
 
@@ -65,6 +85,11 @@ public class PortOneClient {
     private record TokenRequest(
             @JsonProperty("imp_key") String impKey,
             @JsonProperty("imp_secret") String impSecret
+    ) {}
+
+    private record CancelRequest(
+            @JsonProperty("imp_uid") String impUid,
+            String reason
     ) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
