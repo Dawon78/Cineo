@@ -1,5 +1,7 @@
 package com.dw.movie.reservation.service;
 
+import com.dw.movie.common.exception.InvalidSeatSelectionException;
+import com.dw.movie.common.exception.SeatAlreadyReservedException;
 import com.dw.movie.common.exception.ShowtimeNotFoundException;
 import com.dw.movie.reservation.entity.SeatStatus;
 import com.dw.movie.reservation.dto.SeatPriceCalculator;
@@ -36,9 +38,7 @@ public class SeatQueryService {
         Showtime showtime = showtimeRepository.findById(showtimeId)
                 .orElseThrow(() -> new ShowtimeNotFoundException("해당 상영시간표를 찾을 수 없습니다."));
 
-        List<Seat> screenSeats = seatRepository.findAll().stream()
-                .filter(seat -> seat.getScreen().getId().equals(showtime.getScreen().getId()))
-                .toList();
+        List<Seat> screenSeats = seatRepository.findByScreen_Id(showtime.getScreen().getId());
 
         Set<Long> confirmedSeatIds = reservationSeatRepository
                 .findByReservation_Showtime_IdAndReservation_Status(showtimeId, ReservationStatus.CONFIRMED)
@@ -65,6 +65,32 @@ public class SeatQueryService {
             return SeatStatus.HELD;
         }
         return SeatStatus.AVAILABLE;
+    }
+
+    public List<Seat> validateSelectable(Showtime showtime, List<Long> seatIds) {
+        List<Long> distinctSeatIds = seatIds.stream().distinct().toList();
+        if (distinctSeatIds.size() != seatIds.size()) {
+            throw new InvalidSeatSelectionException("중복된 좌석이 포함되어 있습니다.");
+        }
+
+        List<Seat> seats = seatRepository.findAllById(distinctSeatIds);
+        if (seats.size() != distinctSeatIds.size()) {
+            throw new InvalidSeatSelectionException("존재하지 않는 좌석이 포함되어 있습니다.");
+        }
+
+        Long screenId = showtime.getScreen().getId();
+        boolean fromOtherScreen = seats.stream().anyMatch(seat -> !seat.getScreen().getId().equals(screenId));
+        if (fromOtherScreen) {
+            throw new InvalidSeatSelectionException("해당 상영관의 좌석이 아닙니다.");
+        }
+
+        boolean alreadyReserved = reservationSeatRepository
+                .existsByReservation_Showtime_IdAndReservation_StatusAndSeat_IdIn(showtime.getId(), ReservationStatus.CONFIRMED, distinctSeatIds);
+        if (alreadyReserved) {
+            throw new SeatAlreadyReservedException("이미 예약된 좌석이 포함되어 있습니다.");
+        }
+
+        return seats;
     }
 
     public Long calculateTotalPrice(Long showtimeId, List<Long> seatIds){

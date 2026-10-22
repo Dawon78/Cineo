@@ -6,7 +6,9 @@ import com.dw.movie.payment.RefundFailedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -104,5 +106,29 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PortOneApiException.class)
     public ResponseEntity<String> PortOneApiException(PortOneApiException e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidSeatSelectionException.class)
+    public ResponseEntity<String> handleInvalidSeatSelection(InvalidSeatSelectionException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
+    @ExceptionHandler(SeatAlreadyReservedException.class)
+    public ResponseEntity<String> handleSeatAlreadyReserved(SeatAlreadyReservedException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<String> handleValidation(MethodArgumentNotValidException e) {
+        String message = e.getBindingResult().getFieldErrors().stream()
+                .findFirst()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .orElse("잘못된 요청입니다.");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<String> handleMethodValidation(HandlerMethodValidationException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("잘못된 요청 파라미터입니다.");
     }
 }

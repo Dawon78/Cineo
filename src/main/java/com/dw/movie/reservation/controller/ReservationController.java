@@ -4,6 +4,7 @@ import com.dw.movie.reservation.entity.Reservation;
 import com.dw.movie.reservation.service.ReservationService;
 import com.dw.movie.reservation.dto.ReservationConfirmRequest;
 import com.dw.movie.reservation.dto.ReservationResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,7 +23,7 @@ public class ReservationController {
     }
 
     @PostMapping
-    public ResponseEntity<ReservationResponse> confirm(@RequestBody ReservationConfirmRequest request,
+    public ResponseEntity<ReservationResponse> confirm(@Valid @RequestBody ReservationConfirmRequest request,
                                                        @AuthenticationPrincipal Long memberId)
     {
         Reservation reservation = reservationService.confirm(memberId, request.getShowtimeId(),

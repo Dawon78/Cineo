@@ -17,12 +17,14 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final String dummyPasswordHash;
 
 
     public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.dummyPasswordHash = passwordEncoder.encode("timing-attack-dummy-password");
     }
 
     @Transactional
@@ -45,8 +47,11 @@ public class MemberService {
 
     @Transactional
     public TokenResponse login(LoginRequest request) {
-        Member member = memberRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new InvalidCredentialsException("이메일 또는 비밀번호가 일치하지 않습니다."));
+        Member member = memberRepository.findByEmail(request.getEmail()).orElse(null);
+        if (member == null) {
+            passwordEncoder.matches(request.getPassword(), dummyPasswordHash);
+            throw new InvalidCredentialsException("이메일 또는 비밀번호가 일치하지 않습니다.");
+        }
 
         if (!passwordEncoder.matches(request.getPassword(), member.getPassword())) {
             throw new InvalidCredentialsException("이메일 또는 비밀번호가 일치하지 않습니다.");

@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
     List<Reservation> findByMemberId(Long memberId);
+
+    boolean existsByImpUid(String impUid);
 }

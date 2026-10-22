@@ -4,6 +4,7 @@ import com.dw.movie.screen.entity.Screen;
 import com.dw.movie.screen.service.ScreenService;
 import com.dw.movie.screen.dto.ScreenRegisterRequest;
 import com.dw.movie.screen.dto.ScreenResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,7 +24,7 @@ public class ScreenController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<ScreenResponse> register(@RequestBody ScreenRegisterRequest request) {
+    public ResponseEntity<ScreenResponse> register(@Valid @RequestBody ScreenRegisterRequest request) {
         Screen screen = screenService.createScreen(request.getName(), request.getRowCount(), request.getColCount());
         return ResponseEntity.status(HttpStatus.CREATED).body(new ScreenResponse(screen.getId(), screen.getName()));
     }

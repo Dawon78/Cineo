@@ -4,10 +4,13 @@ import com.dw.movie.common.exception.TmdbMovieNotFoundException;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -19,7 +22,13 @@ public class TmdbClient {
 
     public TmdbClient(@Value("${tmdb.api-key}") String apiKey) {
         this.apiKey = apiKey;
-        this.restClient = RestClient.create("https://api.themoviedb.org/3");
+        HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
+        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
+        requestFactory.setReadTimeout(Duration.ofSeconds(5));
+        this.restClient = RestClient.builder()
+                .baseUrl("https://api.themoviedb.org/3")
+                .requestFactory(requestFactory)
+                .build();
     }
 
     public TmdbMovieInfo fetchMovieInfo(Long tmdbId) {

@@ -56,4 +56,8 @@ public class Member {
         this.totalSpent += amount;
     }
 
+    public void subtractSpent(long amount){
+        this.totalSpent = Math.max(0L, this.totalSpent - amount);
+    }
+
 }

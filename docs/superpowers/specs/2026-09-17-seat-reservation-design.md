@@ -148,7 +148,7 @@ com.dw.movie
 ## 인프라
 
 - `build.gradle.kts`에 `spring-boot-starter-data-redis` 의존성 추가
-- 로컬 개발용 Redis는 Docker로 실행: `docker run -p 6379:6379 redis`
+- 로컬 개발용 Redis는 Docker로 실행: `docker run -p 127.0.0.1:6379:6379 redis` (`127.0.0.1`을 빼면 같은 네트워크의 누구나 비밀번호 없이 접속할 수 있으니 반드시 붙일 것)
 - `application.yaml`에 `spring.data.redis.host`/`port` 설정 (기본 localhost:6379, 인증 없음 — 로컬 개발 한정)
 
 ## 테스트
