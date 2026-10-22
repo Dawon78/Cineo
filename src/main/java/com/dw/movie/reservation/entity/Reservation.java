@@ -34,6 +34,7 @@ public class Reservation {
     @Column(unique = true)
     private String impUid;
     private Long paidAmount;
+    private Long earnedPoints;
 
     public Reservation(Member member, Showtime showtime, Long totalPrice){
         this.member = member;
@@ -57,6 +58,10 @@ public class Reservation {
 
     public void applyTotalPrice(long totalPrice) {
         this.totalPrice = totalPrice;
+    }
+
+    public void applyEarnedPoints(long earnedPoints) {
+        this.earnedPoints = earnedPoints;
     }
 
     public void applyPayment(String impUid, Long paidAmount) {

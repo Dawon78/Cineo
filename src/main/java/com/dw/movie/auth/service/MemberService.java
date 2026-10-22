@@ -7,6 +7,7 @@ import com.dw.movie.auth.repository.MemberRepository;
 import com.dw.movie.common.exception.DuplicateEmailException;
 import com.dw.movie.common.exception.InvalidCredentialsException;
 import com.dw.movie.common.exception.InvalidTokenException;
+import com.dw.movie.common.exception.MemberNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -85,6 +86,13 @@ public class MemberService {
         String newAccessToken = jwtTokenProvider.createAccessToken(member.getId(), member.getRole());
 
         return new AccessTokenResponse(newAccessToken);
+    }
+
+    public MemberInfoResponse getMyInfo(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberNotFoundException("해당 회원을 찾을 수 없습니다."));
+        return new MemberInfoResponse(member.getEmail(), member.getName(), member.getTier(),
+                member.getTotalSpent(), member.getPoints());
     }
 
     @Transactional
