@@ -44,21 +44,18 @@ public class ReservationService {
 
     @Transactional
     public Reservation confirm(Long memberId, Long showtimeId, List<Long> seatIds, String impUid) {
+        Member member = memberRepository.findByIdForUpdate(memberId)
+                .orElseThrow(() -> new MemberNotFoundException("해당 회원을 찾을 수 없습니다."));
         Showtime showtime = showtimeRepository.findByIdForUpdate(showtimeId)
                 .orElseThrow(() -> new ShowtimeNotFoundException("해당 상영시간표를 찾을 수 없습니다."));
         if (!showtime.getStartTime().isAfter(LocalDateTime.now())) {
             throw new ShowtimeAlreadyStartedException("이미 시작된 상영시간표입니다.");
         }
-
-        seatHoldService.validateHolder(showtimeId, seatIds, memberId);
-
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberNotFoundException("해당 회원을 찾을 수 없습니다."));
-        List<Seat> seats = seatQueryService.validateSelectable(showtime, seatIds);
-
         if (reservationRepository.existsByImpUid(impUid)) {
             throw new PaymentVerificationFailedException("이미 사용된 결제입니다: " + impUid);
         }
+
+        List<Seat> seats = seatQueryService.validateSeatShape(showtime, seatIds);
 
         long totalPrice = 0L;
         for (Seat seat : seats) {
@@ -73,6 +70,17 @@ public class ReservationService {
             throw new PaymentVerificationFailedException("결제 금액이 일치하지 않습니다.");
         }
 
+        try {
+            seatQueryService.validateNotReserved(showtime, seatIds);
+            seatHoldService.validateNotHeldByOthers(showtimeId, seatIds, memberId);
+        } catch (SeatAlreadyReservedException e) {
+            refundAfterFailure(impUid);
+            throw new SeatAlreadyReservedException(e.getMessage() + " 결제는 자동으로 환불되었습니다.");
+        } catch (SeatAlreadyHeldException e) {
+            refundAfterFailure(impUid);
+            throw new SeatAlreadyHeldException(e.getMessage() + " 결제는 자동으로 환불되었습니다.");
+        }
+
         Reservation reservation = new Reservation(member, showtime, 0L);
         for (Seat seat : seats) {
             long price = SeatPriceCalculator.calculate(showtime.getBasePrice(), seat.getGrade(), showtime.getFormat());
@@ -82,10 +90,14 @@ public class ReservationService {
         reservation.applyPayment(impUid, paymentInfo.amount());
 
         Reservation saved = reservationRepository.save(reservation);
-        seatHoldService.release(showtimeId, seatIds, memberId);
+        seatHoldService.releaseOwned(showtimeId, seatIds, memberId);
         member.addSpent(totalPrice);
 
         return saved;
+    }
+
+    private void refundAfterFailure(String impUid) {
+        portOneClient.cancelPayment(impUid, "좌석 확보 실패로 인한 자동 환불");
     }
 
     public List<Reservation> getMyReservations(Long memberId) {
