@@ -93,6 +93,7 @@ public class ReservationService {
             throw new ReservationAlreadyCancelledException("이미 취소된 예약입니다.");
         }
 
+        portOneClient.cancelPayment(reservation.getImpUid(), "고객 예약 취소");
         reservation.cancel();
     }
 }
