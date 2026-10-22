@@ -2,6 +2,8 @@ package com.dw.movie.reservation;
 
 import com.dw.movie.auth.entity.Member;
 import com.dw.movie.auth.repository.MemberRepository;
+import com.dw.movie.common.exception.SeatAlreadyHeldException;
+import com.dw.movie.common.exception.SeatAlreadyReservedException;
 import com.dw.movie.common.exception.ShowtimeAlreadyStartedException;
 import com.dw.movie.payment.PaymentVerificationFailedException;
 import com.dw.movie.payment.PortOneClient;
@@ -11,6 +13,9 @@ import com.dw.movie.reservation.repository.ReservationRepository;
 import com.dw.movie.reservation.service.ReservationService;
 import com.dw.movie.reservation.service.SeatHoldService;
 import com.dw.movie.reservation.service.SeatQueryService;
+import com.dw.movie.screen.entity.Screen;
+import com.dw.movie.screen.entity.Seat;
+import com.dw.movie.screen.entity.SeatGrade;
 import com.dw.movie.screen.repository.SeatRepository;
 import com.dw.movie.showtime.entity.Showtime;
 import com.dw.movie.showtime.entity.ShowtimeFormat;
@@ -30,11 +35,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class ReservationServiceTest {
+
+    private static final String REFUND_REASON = "좌석 확보 실패로 인한 자동 환불";
 
     @Mock ReservationRepository reservationRepository;
     @Mock ShowtimeRepository showtimeRepository;
@@ -54,6 +62,10 @@ class ReservationServiceTest {
 
     private Showtime showtimeStartingAt(LocalDateTime startTime) {
         return new Showtime(null, null, ShowtimeFormat.TWO_D, startTime, startTime.plusMinutes(120), 10000L);
+    }
+
+    private Seat standardSeat() {
+        return new Seat(new Screen("관"), "A", 1, SeatGrade.STANDARD);
     }
 
     @Test
@@ -85,16 +97,86 @@ class ReservationServiceTest {
 
     @Test
     void 이미_사용된_impUid로는_예약을_확정할_수_없고_포트원도_조회하지_않는다() {
-        Member member = memberWithId(1L);
-        Showtime showtime = showtimeStartingAt(LocalDateTime.now().plusDays(1));
-        given(showtimeRepository.findByIdForUpdate(1L)).willReturn(Optional.of(showtime));
-        given(memberRepository.findById(1L)).willReturn(Optional.of(member));
-        given(seatQueryService.validateSelectable(any(), any())).willReturn(List.of());
+        given(memberRepository.findByIdForUpdate(1L)).willReturn(Optional.of(memberWithId(1L)));
+        given(showtimeRepository.findByIdForUpdate(1L)).willReturn(Optional.of(showtimeStartingAt(LocalDateTime.now().plusDays(1))));
         given(reservationRepository.existsByImpUid("imp_dup")).willReturn(true);
 
         assertThrows(PaymentVerificationFailedException.class,
                 () -> reservationService.confirm(1L, 1L, List.of(5L), "imp_dup"));
 
         verify(portOneClient, never()).getPaymentInfo(any());
+        verify(portOneClient, never()).cancelPayment(any(), any());
+    }
+
+    @Test
+    void 결제금액이_다르면_환불하지_않고_예외를_던진다() {
+        Seat seat = standardSeat();
+        given(memberRepository.findByIdForUpdate(1L)).willReturn(Optional.of(memberWithId(1L)));
+        given(showtimeRepository.findByIdForUpdate(1L)).willReturn(Optional.of(showtimeStartingAt(LocalDateTime.now().plusDays(1))));
+        given(reservationRepository.existsByImpUid("imp_1")).willReturn(false);
+        given(seatQueryService.validateSeatShape(any(), any())).willReturn(List.of(seat));
+        given(portOneClient.getPaymentInfo("imp_1")).willReturn(new PortOneClient.PaymentInfo("imp_1", 5000L, "paid"));
+
+        assertThrows(PaymentVerificationFailedException.class,
+                () -> reservationService.confirm(1L, 1L, List.of(5L), "imp_1"));
+
+        verify(portOneClient, never()).cancelPayment(any(), any());
+    }
+
+    @Test
+    void 결제검증_후_좌석이_이미_예약돼있으면_자동환불하고_예외를_던진다() {
+        Seat seat = standardSeat();
+        given(memberRepository.findByIdForUpdate(1L)).willReturn(Optional.of(memberWithId(1L)));
+        given(showtimeRepository.findByIdForUpdate(1L)).willReturn(Optional.of(showtimeStartingAt(LocalDateTime.now().plusDays(1))));
+        given(reservationRepository.existsByImpUid("imp_1")).willReturn(false);
+        given(seatQueryService.validateSeatShape(any(), any())).willReturn(List.of(seat));
+        given(portOneClient.getPaymentInfo("imp_1")).willReturn(new PortOneClient.PaymentInfo("imp_1", 10000L, "paid"));
+        doThrow(new SeatAlreadyReservedException("이미 예약된 좌석이 포함되어 있습니다."))
+                .when(seatQueryService).validateNotReserved(any(), any());
+
+        assertThrows(SeatAlreadyReservedException.class,
+                () -> reservationService.confirm(1L, 1L, List.of(5L), "imp_1"));
+
+        verify(portOneClient).cancelPayment("imp_1", REFUND_REASON);
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
+    void 결제검증_후_다른_사용자가_선점_중이면_자동환불하고_예외를_던진다() {
+        Seat seat = standardSeat();
+        given(memberRepository.findByIdForUpdate(1L)).willReturn(Optional.of(memberWithId(1L)));
+        given(showtimeRepository.findByIdForUpdate(1L)).willReturn(Optional.of(showtimeStartingAt(LocalDateTime.now().plusDays(1))));
+        given(reservationRepository.existsByImpUid("imp_1")).willReturn(false);
+        given(seatQueryService.validateSeatShape(any(), any())).willReturn(List.of(seat));
+        given(portOneClient.getPaymentInfo("imp_1")).willReturn(new PortOneClient.PaymentInfo("imp_1", 10000L, "paid"));
+        doThrow(new SeatAlreadyHeldException("다른 사용자가 선점 중인 좌석입니다: 5"))
+                .when(seatHoldService).validateNotHeldByOthers(any(), any(), any());
+
+        assertThrows(SeatAlreadyHeldException.class,
+                () -> reservationService.confirm(1L, 1L, List.of(5L), "imp_1"));
+
+        verify(portOneClient).cancelPayment("imp_1", REFUND_REASON);
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
+    void 선점이_만료됐어도_좌석이_비어있으면_예약이_확정되고_환불되지_않는다() {
+        Member member = memberWithId(1L);
+        Seat seat = standardSeat();
+        given(memberRepository.findByIdForUpdate(1L)).willReturn(Optional.of(member));
+        given(showtimeRepository.findByIdForUpdate(1L)).willReturn(Optional.of(showtimeStartingAt(LocalDateTime.now().plusDays(1))));
+        given(reservationRepository.existsByImpUid("imp_1")).willReturn(false);
+        given(seatQueryService.validateSeatShape(any(), any())).willReturn(List.of(seat));
+        given(portOneClient.getPaymentInfo("imp_1")).willReturn(new PortOneClient.PaymentInfo("imp_1", 10000L, "paid"));
+        given(reservationRepository.save(any(Reservation.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        Reservation result = reservationService.confirm(1L, 1L, List.of(5L), "imp_1");
+
+        assertEquals(ReservationStatus.CONFIRMED, result.getStatus());
+        assertEquals("imp_1", result.getImpUid());
+        assertEquals(10000L, result.getTotalPrice());
+        assertEquals(10000L, member.getTotalSpent());
+        verify(seatHoldService).releaseOwned(1L, List.of(5L), 1L);
+        verify(portOneClient, never()).cancelPayment(any(), any());
     }
 }

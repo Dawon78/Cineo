@@ -68,6 +68,12 @@ public class SeatQueryService {
     }
 
     public List<Seat> validateSelectable(Showtime showtime, List<Long> seatIds) {
+        List<Seat> seats = validateSeatShape(showtime, seatIds);
+        validateNotReserved(showtime, seatIds);
+        return seats;
+    }
+
+    public List<Seat> validateSeatShape(Showtime showtime, List<Long> seatIds) {
         List<Long> distinctSeatIds = seatIds.stream().distinct().toList();
         if (distinctSeatIds.size() != seatIds.size()) {
             throw new InvalidSeatSelectionException("중복된 좌석이 포함되어 있습니다.");
@@ -84,13 +90,15 @@ public class SeatQueryService {
             throw new InvalidSeatSelectionException("해당 상영관의 좌석이 아닙니다.");
         }
 
+        return seats;
+    }
+
+    public void validateNotReserved(Showtime showtime, List<Long> seatIds) {
         boolean alreadyReserved = reservationSeatRepository
-                .existsByReservation_Showtime_IdAndReservation_StatusAndSeat_IdIn(showtime.getId(), ReservationStatus.CONFIRMED, distinctSeatIds);
+                .existsByReservation_Showtime_IdAndReservation_StatusAndSeat_IdIn(showtime.getId(), ReservationStatus.CONFIRMED, seatIds);
         if (alreadyReserved) {
             throw new SeatAlreadyReservedException("이미 예약된 좌석이 포함되어 있습니다.");
         }
-
-        return seats;
     }
 
     public Long calculateTotalPrice(Long showtimeId, List<Long> seatIds){

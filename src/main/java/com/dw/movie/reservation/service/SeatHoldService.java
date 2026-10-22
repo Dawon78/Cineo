@@ -63,6 +63,24 @@ public class SeatHoldService {
         }
     }
 
+    public void validateNotHeldByOthers(Long showtimeId, List<Long> seatIds, Long memberId) {
+        for (Long seatId : seatIds) {
+            String holderId = redisTemplate.opsForValue().get(key(showtimeId, seatId));
+            if (holderId != null && !holderId.equals(String.valueOf(memberId))) {
+                throw new SeatAlreadyHeldException("다른 사용자가 선점 중인 좌석입니다: " + seatId);
+            }
+        }
+    }
+
+    public void releaseOwned(Long showtimeId, List<Long> seatIds, Long memberId) {
+        for (Long seatId : seatIds) {
+            String key = key(showtimeId, seatId);
+            if (String.valueOf(memberId).equals(redisTemplate.opsForValue().get(key))) {
+                redisTemplate.delete(key);
+            }
+        }
+    }
+
     private String key(Long showtimeId, Long seatId) {
         return "seat-hold:" + showtimeId + ":" + seatId;
     }
