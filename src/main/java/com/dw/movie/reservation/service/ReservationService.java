@@ -88,10 +88,10 @@ public class ReservationService {
         }
         reservation.applyTotalPrice(totalPrice);
         reservation.applyPayment(impUid, paymentInfo.amount());
+        reservation.applyEarnedPoints(member.recordPayment(totalPrice));
 
         Reservation saved = reservationRepository.save(reservation);
         seatHoldService.releaseOwned(showtimeId, seatIds, memberId);
-        member.addSpent(totalPrice);
 
         return saved;
     }
@@ -122,6 +122,7 @@ public class ReservationService {
 
         portOneClient.cancelPayment(reservation.getImpUid(), "고객 예약 취소");
         reservation.cancel();
-        reservation.getMember().subtractSpent(reservation.getTotalPrice());
+        long earnedPoints = reservation.getEarnedPoints() == null ? 0L : reservation.getEarnedPoints();
+        reservation.getMember().refundPayment(reservation.getTotalPrice(), earnedPoints);
     }
 }

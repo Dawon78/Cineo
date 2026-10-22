@@ -52,12 +52,18 @@ public class Member {
         this.refreshToken = refreshToken;
     }
 
-    public void addSpent(long amount){
+    public long recordPayment(long amount) {
+        long earned = tier.earnPoints(amount);
         this.totalSpent += amount;
+        this.points += earned;
+        this.tier = Tier.from(this.totalSpent);
+        return earned;
     }
 
-    public void subtractSpent(long amount){
+    public void refundPayment(long amount, long earnedPoints) {
         this.totalSpent = Math.max(0L, this.totalSpent - amount);
+        this.points = Math.max(0L, this.points - earnedPoints);
+        this.tier = Tier.from(this.totalSpent);
     }
 
 }

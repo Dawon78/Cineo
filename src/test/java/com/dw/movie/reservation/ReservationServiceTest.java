@@ -81,11 +81,12 @@ class ReservationServiceTest {
     }
 
     @Test
-    void 정상_취소하면_환불이_호출되고_누적결제금액이_복구된다() {
+    void 정상_취소하면_환불이_호출되고_누적결제금액과_포인트가_복구된다() {
         Member member = memberWithId(1L);
-        member.addSpent(10000L);
+        long earned = member.recordPayment(10000L);
         Reservation reservation = new Reservation(member, showtimeStartingAt(LocalDateTime.now().plusDays(1)), 10000L);
         reservation.applyPayment("imp_1", 10000L);
+        reservation.applyEarnedPoints(earned);
         given(reservationRepository.findById(10L)).willReturn(Optional.of(reservation));
 
         reservationService.cancel(1L, 10L);
@@ -93,6 +94,7 @@ class ReservationServiceTest {
         verify(portOneClient).cancelPayment("imp_1", "고객 예약 취소");
         assertEquals(ReservationStatus.CANCELLED, reservation.getStatus());
         assertEquals(0L, member.getTotalSpent());
+        assertEquals(0L, member.getPoints());
     }
 
     @Test
@@ -176,6 +178,8 @@ class ReservationServiceTest {
         assertEquals("imp_1", result.getImpUid());
         assertEquals(10000L, result.getTotalPrice());
         assertEquals(10000L, member.getTotalSpent());
+        assertEquals(100L, member.getPoints());
+        assertEquals(100L, result.getEarnedPoints());
         verify(seatHoldService).releaseOwned(1L, List.of(5L), 1L);
         verify(portOneClient, never()).cancelPayment(any(), any());
     }
