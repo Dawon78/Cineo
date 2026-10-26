@@ -1,6 +1,6 @@
 package com.dw.movie.reservation.entity;
 
-import com.dw.movie.auth.entity.Member;
+import com.dw.movie.member.entity.Member;
 import com.dw.movie.screen.entity.Seat;
 import com.dw.movie.showtime.entity.Showtime;
 import jakarta.persistence.*;

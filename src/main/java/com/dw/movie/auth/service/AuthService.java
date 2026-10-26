@@ -1,19 +1,18 @@
 package com.dw.movie.auth.service;
 
-import com.dw.movie.auth.JwtTokenProvider;
+import com.dw.movie.auth.jwt.JwtTokenProvider;
 import com.dw.movie.auth.dto.*;
-import com.dw.movie.auth.entity.Member;
-import com.dw.movie.auth.repository.MemberRepository;
+import com.dw.movie.member.entity.Member;
+import com.dw.movie.member.repository.MemberRepository;
 import com.dw.movie.common.exception.DuplicateEmailException;
 import com.dw.movie.common.exception.InvalidCredentialsException;
 import com.dw.movie.common.exception.InvalidTokenException;
-import com.dw.movie.common.exception.MemberNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class MemberService {
+public class AuthService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
@@ -21,7 +20,7 @@ public class MemberService {
     private final String dummyPasswordHash;
 
 
-    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider) {
+    public AuthService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
@@ -86,13 +85,6 @@ public class MemberService {
         String newAccessToken = jwtTokenProvider.createAccessToken(member.getId(), member.getRole());
 
         return new AccessTokenResponse(newAccessToken);
-    }
-
-    public MemberInfoResponse getMyInfo(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberNotFoundException("해당 회원을 찾을 수 없습니다."));
-        return new MemberInfoResponse(member.getEmail(), member.getName(), member.getTier(),
-                member.getTotalSpent(), member.getPoints());
     }
 
     @Transactional

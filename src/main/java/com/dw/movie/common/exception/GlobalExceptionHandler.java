@@ -1,8 +1,8 @@
 package com.dw.movie.common.exception;
 
-import com.dw.movie.payment.PaymentVerificationFailedException;
-import com.dw.movie.payment.PortOneApiException;
-import com.dw.movie.payment.RefundFailedException;
+import com.dw.movie.payment.exception.PaymentVerificationFailedException;
+import com.dw.movie.payment.exception.PortOneApiException;
+import com.dw.movie.payment.exception.RefundFailedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

@@ -1,4 +1,6 @@
-package com.dw.movie.movie;
+package com.dw.movie.movie.repository;
+
+import com.dw.movie.movie.entity.Movie;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

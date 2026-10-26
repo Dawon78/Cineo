@@ -1,6 +1,6 @@
-package com.dw.movie.auth.repository;
+package com.dw.movie.member.repository;
 
-import com.dw.movie.auth.entity.Member;
+import com.dw.movie.member.entity.Member;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;

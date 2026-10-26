@@ -1,6 +1,6 @@
 package com.dw.movie.config;
 
-import com.dw.movie.auth.JwtTokenProvider;
+import com.dw.movie.auth.jwt.JwtTokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;

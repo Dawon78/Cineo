@@ -1,5 +1,6 @@
 package com.dw.movie.movie;
 
+import com.dw.movie.movie.entity.Movie;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;

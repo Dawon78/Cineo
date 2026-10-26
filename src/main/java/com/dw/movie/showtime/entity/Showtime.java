@@ -1,6 +1,6 @@
 package com.dw.movie.showtime.entity;
 
-import com.dw.movie.movie.Movie;
+import com.dw.movie.movie.entity.Movie;
 import com.dw.movie.screen.entity.Screen;
 import jakarta.persistence.*;
 import lombok.Getter;

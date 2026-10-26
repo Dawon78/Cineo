@@ -1,6 +1,6 @@
 package com.dw.movie.config;
 
-import com.dw.movie.auth.JwtTokenProvider;
+import com.dw.movie.auth.jwt.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

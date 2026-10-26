@@ -1,6 +1,6 @@
 package com.dw.movie.reservation;
 
-import com.dw.movie.auth.entity.Member;
+import com.dw.movie.member.entity.Member;
 import com.dw.movie.reservation.entity.Reservation;
 import com.dw.movie.reservation.entity.ReservationSeat;
 import com.dw.movie.reservation.entity.ReservationStatus;

@@ -1,7 +1,9 @@
-package com.dw.movie.movie;
+package com.dw.movie.movie.controller;
 
 import com.dw.movie.movie.dto.MovieRegisterRequest;
 import com.dw.movie.movie.dto.MovieResponse;
+import com.dw.movie.movie.entity.Movie;
+import com.dw.movie.movie.service.MovieService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

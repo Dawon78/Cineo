@@ -1,4 +1,4 @@
-package com.dw.movie.movie;
+package com.dw.movie.movie.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

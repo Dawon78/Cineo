@@ -1,7 +1,10 @@
-package com.dw.movie.movie;
+package com.dw.movie.movie.service;
 
 import com.dw.movie.common.exception.DuplicateTmdbIdException;
 import com.dw.movie.common.exception.MovieNotFoundException;
+import com.dw.movie.movie.client.TmdbClient;
+import com.dw.movie.movie.entity.Movie;
+import com.dw.movie.movie.repository.MovieRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

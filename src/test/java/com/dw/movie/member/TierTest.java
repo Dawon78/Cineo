@@ -1,6 +1,6 @@
-package com.dw.movie.auth;
+package com.dw.movie.member;
 
-import com.dw.movie.auth.entity.Tier;
+import com.dw.movie.member.entity.Tier;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

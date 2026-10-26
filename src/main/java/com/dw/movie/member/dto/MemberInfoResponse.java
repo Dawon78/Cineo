@@ -1,6 +1,6 @@
-package com.dw.movie.auth.dto;
+package com.dw.movie.member.dto;
 
-import com.dw.movie.auth.entity.Tier;
+import com.dw.movie.member.entity.Tier;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

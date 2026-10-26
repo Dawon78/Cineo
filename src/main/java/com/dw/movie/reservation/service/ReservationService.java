@@ -1,10 +1,10 @@
 package com.dw.movie.reservation.service;
 
-import com.dw.movie.auth.entity.Member;
-import com.dw.movie.auth.repository.MemberRepository;
+import com.dw.movie.member.entity.Member;
+import com.dw.movie.member.repository.MemberRepository;
 import com.dw.movie.common.exception.*;
-import com.dw.movie.payment.PaymentVerificationFailedException;
-import com.dw.movie.payment.PortOneClient;
+import com.dw.movie.payment.exception.PaymentVerificationFailedException;
+import com.dw.movie.payment.client.PortOneClient;
 import com.dw.movie.reservation.entity.ReservationStatus;
 import com.dw.movie.reservation.dto.SeatPriceCalculator;
 import com.dw.movie.reservation.entity.Reservation;

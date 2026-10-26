@@ -2,8 +2,8 @@ package com.dw.movie.showtime.service;
 
 import com.dw.movie.common.exception.MovieNotFoundException;
 import com.dw.movie.common.exception.ScreenNotFoundException;
-import com.dw.movie.movie.Movie;
-import com.dw.movie.movie.MovieRepository;
+import com.dw.movie.movie.entity.Movie;
+import com.dw.movie.movie.repository.MovieRepository;
 import com.dw.movie.screen.entity.Screen;
 import com.dw.movie.screen.repository.ScreenRepository;
 import com.dw.movie.showtime.entity.Showtime;

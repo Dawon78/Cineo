@@ -1,4 +1,4 @@
-package com.dw.movie.auth.entity;
+package com.dw.movie.member.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

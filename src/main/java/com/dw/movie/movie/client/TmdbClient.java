@@ -1,4 +1,4 @@
-package com.dw.movie.movie;
+package com.dw.movie.movie.client;
 
 import com.dw.movie.common.exception.TmdbMovieNotFoundException;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

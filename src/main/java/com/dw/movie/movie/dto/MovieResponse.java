@@ -1,5 +1,6 @@
 package com.dw.movie.movie.dto;
 
+import com.dw.movie.movie.entity.Movie;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -16,4 +17,18 @@ public class MovieResponse {
     private LocalDate releaseDate;
     private Integer runningTime;
     private String ageRating;
+
+    public static MovieResponse from(Movie movie) {
+        return new MovieResponse(
+                movie.getId(),
+                movie.getTmdbId(),
+                movie.getTitle(),
+                movie.getPosterUrl(),
+                movie.getOverview(),
+                movie.getReleaseDate(),
+                movie.getRunningTime(),
+                movie.getAgeRating()
+        );
+    }
 }
+

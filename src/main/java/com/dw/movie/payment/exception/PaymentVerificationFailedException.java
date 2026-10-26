@@ -1,4 +1,4 @@
-package com.dw.movie.payment;
+package com.dw.movie.payment.exception;
 
 public class PaymentVerificationFailedException extends RuntimeException {
     public PaymentVerificationFailedException(String message){

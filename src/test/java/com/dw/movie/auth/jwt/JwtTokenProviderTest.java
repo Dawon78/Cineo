@@ -1,6 +1,6 @@
-package com.dw.movie.auth;
+package com.dw.movie.auth.jwt;
 
-import com.dw.movie.auth.entity.Role;
+import com.dw.movie.member.entity.Role;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
