@@ -1,30 +1,22 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { Routes, Route, Link } from 'react-router'
 import './App.css'
-import MovieCard from './components/MovieCard'
-import TicketCounter from './components/TicketCounter'
+import MovieListPage from './pages/MovieListPage'
+import LoginPage from './pages/LoginPage'
 
 function App() {
-  const title = 'Cineo'
-  const price = 12000
-  const movies = [
-    { id: 1, title: '인셉션', runtime: 148 },
-    { id: 2, title: '인터스텔라', runtime: 169 },
-    { id: 3, title: '듄', runtime: 155 },
-  ]
-
   return (
     <div>
-      <h1 className="title">{title}</h1>
-      <p>티켓 가격: {price}원</p>
-      <p>2장이면: {price * 2}원</p>
-      <input />
-      {movies.map(movie => (
-        <MovieCard key={movie.id} title={movie.title} runtime={movie.runtime} />
-      ))}
-      <TicketCounter />
+      <header>
+        <h1>Cineo</h1>
+        <nav>
+          <Link to="/">영화</Link> | <Link to="/login">로그인</Link>
+        </nav>
+      </header>
+
+      <Routes>
+        <Route path="/" element={<MovieListPage />} />
+        <Route path="/login" element={<LoginPage />} />
+      </Routes>
     </div>
   )
 }
