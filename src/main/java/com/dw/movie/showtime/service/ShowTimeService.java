@@ -46,4 +46,8 @@ public class ShowTimeService {
     public List<Showtime> getAllShowtimes() {
         return showtimeRepository.findAll();
     }
+
+    public List<Showtime> getUpcomingShowtimes(Long movieId) {
+        return showtimeRepository.findByMovieIdAndStartTimeAfterOrderByStartTimeAsc(movieId, LocalDateTime.now());
+    }
 }
