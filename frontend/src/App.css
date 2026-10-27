@@ -594,6 +594,78 @@
   font-weight: 600;
 }
 
+.reservation-movie a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.reservation-movie a:hover {
+  text-decoration: underline;
+}
+
+/* 예매 상세 */
+.ticket.is-cancelled .ticket-movie {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.ticket-section-title {
+  margin-bottom: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.ticket-row-total {
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.ticket-row-total dd {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.ticket-code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+  word-break: break-all;
+}
+
+.ticket-stub dl {
+  margin-bottom: 20px;
+}
+
+/* 결제 완료 작은 창 */
+.paid-dialog {
+  width: min(360px, calc(100vw - 32px));
+  padding: 28px 24px 24px;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: center;
+}
+
+.paid-dialog::backdrop {
+  background: rgba(15, 20, 32, 0.55);
+}
+
+.paid-dialog-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.paid-dialog-text {
+  margin-bottom: 20px;
+  color: var(--muted);
+}
+
+.paid-dialog .btn {
+  width: 100%;
+}
+
 .reservation-meta {
   color: var(--muted);
   font-size: 0.9rem;

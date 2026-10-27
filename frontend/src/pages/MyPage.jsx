@@ -111,7 +111,9 @@ function MyPage() {
                     return (
                         <li key={reservation.id} className={cancelled ? 'reservation-item is-cancelled' : 'reservation-item'}>
                             <div>
-                                <p className="reservation-movie">{reservation.movieTitle}</p>
+                                <p className="reservation-movie">
+                                    <Link to={`/reservations/${reservation.id}`}>{reservation.movieTitle}</Link>
+                                </p>
                                 <p className="reservation-meta">
                                     {new Date(reservation.startTime).toLocaleString('ko-KR', {
                                         month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit',

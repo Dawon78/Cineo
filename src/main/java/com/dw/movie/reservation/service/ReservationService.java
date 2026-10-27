@@ -8,6 +8,7 @@ import com.dw.movie.payment.exception.PortOneApiException;
 import com.dw.movie.payment.exception.RefundFailedException;
 import com.dw.movie.payment.client.PortOneClient;
 import com.dw.movie.reservation.entity.ReservationStatus;
+import com.dw.movie.reservation.dto.ReservationDetailResponse;
 import com.dw.movie.reservation.dto.SeatPriceCalculator;
 import com.dw.movie.reservation.entity.Reservation;
 import com.dw.movie.reservation.repository.ReservationRepository;
@@ -126,6 +127,17 @@ public class ReservationService {
 
     public List<Reservation> getMyReservations(Long memberId) {
         return reservationRepository.findByMemberId(memberId);
+    }
+
+    // 좌석 목록(seats)은 지연 로딩이라, 트랜잭션 안에서 응답으로 바꿔서 돌려준다
+    @Transactional(readOnly = true)
+    public ReservationDetailResponse getMyReservation(Long memberId, Long reservationId) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new ReservationNotFoundException("해당 예약을 찾을 수 없습니다."));
+        if (!reservation.getMember().getId().equals(memberId)) {
+            throw new NotReservationOwnerException("본인의 예약이 아닙니다.");
+        }
+        return ReservationDetailResponse.from(reservation);
     }
 
     @Transactional

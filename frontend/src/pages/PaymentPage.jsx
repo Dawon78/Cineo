@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useLocation, useNavigate, Navigate, Link } from 'react-router'
+import { useLocation, useNavigate, Navigate } from 'react-router'
 import { apiFetch } from '../api/client'
 
 function formatRemaining(seconds) {
@@ -14,7 +14,6 @@ function PaymentPage() {
     const [amount, setAmount] = useState(null)
     const [paying, setPaying] = useState(false)
     const [message, setMessage] = useState('')
-    const [reservation, setReservation] = useState(null)
     const [now, setNow] = useState(() => Date.now())
 
     const holdExpiresAt = order?.holdExpiresAt
@@ -22,13 +21,13 @@ function PaymentPage() {
     const holdExpired = remainingSeconds === 0
 
     useEffect(() => {
-        // 마감됐거나 예매가 끝나면 더 셀 필요가 없다
-        if (!holdExpiresAt || holdExpired || reservation) {
+        // 마감되면 더 셀 필요가 없다
+        if (!holdExpiresAt || holdExpired) {
             return
         }
         const timerId = setInterval(() => setNow(Date.now()), 1000)
         return () => clearInterval(timerId)
-    }, [holdExpiresAt, holdExpired, reservation])
+    }, [holdExpiresAt, holdExpired])
 
     useEffect(() => {
         if (!order) {
@@ -71,7 +70,9 @@ function PaymentPage() {
                 setMessage(await response.text())
                 return
             }
-            setReservation(await response.json())
+            const saved = await response.json()
+            // replace라서 결제 화면이 방문 기록에서 빠진다. 뒤로 가기로 돌아와 다시 결제하는 일을 막는다
+            navigate(`/reservations/${saved.id}`, { replace: true, state: { justPaid: true } })
         } catch {
             setMessage(`결제는 완료됐지만 예매 확정 요청에 실패했어요. 결제번호(${impUid})를 보관해 주세요.`)
         } finally {
@@ -123,44 +124,6 @@ function PaymentPage() {
             // 선점 해제에 실패해도 5분 뒤 자동으로 풀리므로 좌석 화면으로는 보낸다
         }
         navigate(`/showtimes/${order.showtimeId}/seats`)
-    }
-
-    if (reservation) {
-        return (
-            <section>
-                <h1 className="page-title">예매가 완료됐어요</h1>
-                <div className="ticket">
-                    <div className="ticket-main">
-                        <p className="ticket-movie">{reservation.movieTitle}</p>
-                        <dl>
-                            <div className="ticket-row">
-                                <dt>일시</dt>
-                                <dd>
-                                    {new Date(reservation.startTime).toLocaleString('ko-KR', {
-                                        month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit',
-                                    })}
-                                </dd>
-                            </div>
-                            <div className="ticket-row">
-                                <dt>상영관</dt>
-                                <dd>{reservation.screenName}</dd>
-                            </div>
-                            <div className="ticket-row">
-                                <dt>좌석</dt>
-                                <dd>{order.seatLabels.join(', ')}</dd>
-                            </div>
-                        </dl>
-                    </div>
-                    <div className="ticket-stub">
-                        <div className="ticket-total">
-                            <span>결제 금액</span>
-                            <strong>{reservation.totalPrice.toLocaleString()}원</strong>
-                        </div>
-                        <Link to="/" className="btn">다른 영화 보기</Link>
-                    </div>
-                </div>
-            </section>
-        )
     }
 
     return (

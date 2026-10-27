@@ -2,7 +2,11 @@ package com.dw.movie.reservation;
 
 import com.dw.movie.member.entity.Member;
 import com.dw.movie.member.repository.MemberRepository;
+import com.dw.movie.common.exception.NotReservationOwnerException;
+import com.dw.movie.common.exception.ReservationNotFoundException;
 import com.dw.movie.common.exception.SeatAlreadyHeldException;
+import com.dw.movie.movie.entity.Movie;
+import com.dw.movie.reservation.dto.ReservationDetailResponse;
 import com.dw.movie.common.exception.SeatAlreadyReservedException;
 import com.dw.movie.common.exception.ShowtimeAlreadyStartedException;
 import com.dw.movie.payment.exception.PaymentVerificationFailedException;
@@ -68,6 +72,44 @@ class ReservationServiceTest {
 
     private Seat standardSeat() {
         return new Seat(new Screen("관"), "A", 1, SeatGrade.STANDARD);
+    }
+
+    @Test
+    void 본인_예약은_좌석과_결제_정보를_상세로_볼_수_있다() {
+        Movie movie = new Movie(27205L, "인셉션", "poster.jpg", "줄거리", null, 148, "12");
+        Screen screen = new Screen("1관");
+        LocalDateTime startTime = LocalDateTime.now().plusDays(1);
+        Showtime showtime = new Showtime(movie, screen, ShowtimeFormat.TWO_D, startTime, startTime.plusMinutes(148), 10000L);
+        Reservation reservation = new Reservation(memberWithId(1L), showtime);
+        reservation.addSeat(new Seat(screen, "B", 1, SeatGrade.STANDARD), 10000L);
+        reservation.addSeat(new Seat(screen, "A", 2, SeatGrade.STANDARD), 10000L);
+        reservation.applyPayment("imp_1", 20000L);
+        reservation.applyEarnedPoints(200L);
+        given(reservationRepository.findById(10L)).willReturn(Optional.of(reservation));
+
+        ReservationDetailResponse detail = reservationService.getMyReservation(1L, 10L);
+
+        assertEquals("인셉션", detail.getMovieTitle());
+        assertEquals("1관", detail.getScreenName());
+        assertEquals(List.of("A2", "B1"), detail.getSeats().stream().map(ReservationDetailResponse.SeatItem::getLabel).toList());
+        assertEquals(20000L, detail.getPaidAmount());
+        assertEquals("imp_1", detail.getImpUid());
+        assertEquals(200L, detail.getEarnedPoints());
+    }
+
+    @Test
+    void 본인_예약이_아니면_상세를_볼_수_없다() {
+        Reservation reservation = new Reservation(memberWithId(1L), showtimeStartingAt(LocalDateTime.now().plusDays(1)));
+        given(reservationRepository.findById(10L)).willReturn(Optional.of(reservation));
+
+        assertThrows(NotReservationOwnerException.class, () -> reservationService.getMyReservation(2L, 10L));
+    }
+
+    @Test
+    void 없는_예약이면_상세_조회에서_예외를_던진다() {
+        given(reservationRepository.findById(10L)).willReturn(Optional.empty());
+
+        assertThrows(ReservationNotFoundException.class, () -> reservationService.getMyReservation(1L, 10L));
     }
 
     @Test

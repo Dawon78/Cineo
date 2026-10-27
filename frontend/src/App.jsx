@@ -8,6 +8,7 @@ import SeatPage from './pages/SeatPage'
 import PaymentPage from './pages/PaymentPage'
 import SignupPage from './pages/SignupPage'
 import MyPage from './pages/MyPage'
+import ReservationDetailPage from './pages/ReservationDetailPage'
 import { getAccessToken, clearTokens, subscribeAuth } from './auth'
 import { apiFetch } from './api/client'
 
@@ -58,6 +59,7 @@ function App() {
           <Route path="/movies/:movieId" element={<MovieDetailPage />} />
           <Route path="/showtimes/:showtimeId/seats" element={<SeatPage />} />
           <Route path="/payment" element={<PaymentPage />} />
+          <Route path="/reservations/:reservationId" element={<ReservationDetailPage />} />
         </Routes>
       </main>
     </>

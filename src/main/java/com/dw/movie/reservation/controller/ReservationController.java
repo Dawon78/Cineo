@@ -3,6 +3,7 @@ package com.dw.movie.reservation.controller;
 import com.dw.movie.reservation.entity.Reservation;
 import com.dw.movie.reservation.service.ReservationService;
 import com.dw.movie.reservation.dto.ReservationConfirmRequest;
+import com.dw.movie.reservation.dto.ReservationDetailResponse;
 import com.dw.movie.reservation.dto.ReservationResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -47,6 +48,11 @@ public class ReservationController {
     public ResponseEntity<List<ReservationResponse>> getMyReservations(@AuthenticationPrincipal Long memberId){
         List<Reservation> reservations = reservationService.getMyReservations(memberId);
         return ResponseEntity.ok(reservations.stream().map(this::toResponse).toList());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ReservationDetailResponse> getMyReservation(@PathVariable Long id, @AuthenticationPrincipal Long memberId) {
+        return ResponseEntity.ok(reservationService.getMyReservation(memberId, id));
     }
 
     @DeleteMapping("/{id}")
