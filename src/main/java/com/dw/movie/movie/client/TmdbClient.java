@@ -45,9 +45,7 @@ public class TmdbClient {
             throw new TmdbMovieNotFoundException("TMDB에서 해당 영화를 찾을 수 없습니다: " + tmdbId);
         }
 
-        String posterUrl = detail.posterPath() != null
-                ? "https://image.tmdb.org/t/p/w500" + detail.posterPath()
-                : null;
+        String posterUrl = posterUrl(detail.posterPath());
 
         String ageRating = fetchAgeRating(tmdbId);
 
@@ -59,6 +57,31 @@ public class TmdbClient {
                 detail.runtime(),
                 ageRating
         );
+    }
+
+    // 첫 페이지(최대 20개)만 쓴다
+    public List<TmdbSearchItem> searchMovies(String query) {
+        SearchResponse response = restClient.get()
+                .uri("/search/movie?api_key={key}&language=ko-KR&include_adult=false&query={query}", apiKey, query)
+                .retrieve()
+                .body(SearchResponse.class);
+
+        if (response == null || response.results() == null) {
+            return List.of();
+        }
+
+        return response.results().stream()
+                .map(result -> new TmdbSearchItem(
+                        result.id(),
+                        result.title(),
+                        result.releaseDate(),
+                        posterUrl(result.posterPath())
+                ))
+                .toList();
+    }
+
+    private String posterUrl(String posterPath) {
+        return posterPath != null ? "https://image.tmdb.org/t/p/w500" + posterPath : null;
     }
 
     private String fetchAgeRating(Long tmdbId) {
@@ -96,6 +119,25 @@ public class TmdbClient {
             @JsonProperty("poster_path") String posterPath,
             @JsonProperty("release_date") LocalDate releaseDate,
             Integer runtime
+    ) {}
+
+    public record TmdbSearchItem(
+            Long tmdbId,
+            String title,
+            String releaseDate,
+            String posterUrl
+    ) {}
+
+    // 검색 결과는 개봉일이 없으면 null이 아니라 ""를 준다. LocalDate로 받으면 실패하니 문자열로 받는다
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record SearchResponse(List<SearchResult> results) {}
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record SearchResult(
+            Long id,
+            String title,
+            @JsonProperty("poster_path") String posterPath,
+            @JsonProperty("release_date") String releaseDate
     ) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)

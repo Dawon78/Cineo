@@ -2,9 +2,11 @@ package com.dw.movie.movie.controller;
 
 import com.dw.movie.movie.dto.MovieRegisterRequest;
 import com.dw.movie.movie.dto.MovieResponse;
+import com.dw.movie.movie.dto.TmdbSearchResponse;
 import com.dw.movie.movie.entity.Movie;
 import com.dw.movie.movie.service.MovieService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,6 +39,12 @@ public class MovieController {
                 .map(MovieResponse::from)
                 .toList();
         return ResponseEntity.ok(responses);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/search")
+    public ResponseEntity<List<TmdbSearchResponse>> search(@RequestParam @NotBlank String query) {
+        return ResponseEntity.ok(movieService.searchTmdb(query.trim()));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
