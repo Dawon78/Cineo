@@ -29,7 +29,7 @@ public class Showtime {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Long basePrice;
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 
     public Showtime(Movie movie, Screen screen, ShowtimeFormat format, LocalDateTime startTime, LocalDateTime endTime, Long basePrice){
         this.movie = movie;
@@ -38,7 +38,7 @@ public class Showtime {
         this.startTime = startTime;
         this.endTime = endTime;
         this.basePrice = basePrice;
-        this.createAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
 
 }

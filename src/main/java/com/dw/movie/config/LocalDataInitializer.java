@@ -8,7 +8,7 @@ import com.dw.movie.screen.repository.ScreenRepository;
 import com.dw.movie.screen.service.ScreenService;
 import com.dw.movie.showtime.entity.ShowtimeFormat;
 import com.dw.movie.showtime.repository.ShowtimeRepository;
-import com.dw.movie.showtime.service.ShowTimeService;
+import com.dw.movie.showtime.service.ShowtimeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -36,17 +36,17 @@ public class LocalDataInitializer implements CommandLineRunner {
     private final MovieRepository movieRepository;
     private final ScreenService screenService;
     private final ScreenRepository screenRepository;
-    private final ShowTimeService showTimeService;
+    private final ShowtimeService showtimeService;
     private final ShowtimeRepository showtimeRepository;
 
     public LocalDataInitializer(MovieService movieService, MovieRepository movieRepository,
                                 ScreenService screenService, ScreenRepository screenRepository,
-                                ShowTimeService showTimeService, ShowtimeRepository showtimeRepository) {
+                                ShowtimeService showtimeService, ShowtimeRepository showtimeRepository) {
         this.movieService = movieService;
         this.movieRepository = movieRepository;
         this.screenService = screenService;
         this.screenRepository = screenRepository;
-        this.showTimeService = showTimeService;
+        this.showtimeService = showtimeService;
         this.showtimeRepository = showtimeRepository;
     }
 
@@ -80,7 +80,7 @@ public class LocalDataInitializer implements CommandLineRunner {
             for (int day = 0; day < DAYS; day++) {
                 for (LocalTime time : START_TIMES) {
                     LocalDateTime startTime = LocalDateTime.of(tomorrow.plusDays(day), time);
-                    showTimeService.createShowtime(movie.getId(), screen.getId(),
+                    showtimeService.createShowtime(movie.getId(), screen.getId(),
                             ShowtimeFormat.TWO_D, startTime, 12000L);
                 }
             }

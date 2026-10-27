@@ -73,6 +73,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 
+    @ExceptionHandler(InvalidShowtimeException.class)
+    public ResponseEntity<String> handleInvalidShowtime(InvalidShowtimeException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
     @ExceptionHandler(MemberNotFoundException.class)
     public ResponseEntity<String> MemberNotFoundException(MemberNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

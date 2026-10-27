@@ -1,7 +1,7 @@
 package com.dw.movie.showtime.controller;
 
 import com.dw.movie.showtime.dto.ShowtimeResponse;
-import com.dw.movie.showtime.service.ShowTimeService;
+import com.dw.movie.showtime.service.ShowtimeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,15 +14,15 @@ import java.util.List;
 @RequestMapping("/api/movies/{movieId}/showtimes")
 public class ShowtimePublicController {
 
-    private final ShowTimeService showTimeService;
+    private final ShowtimeService showtimeService;
 
-    public ShowtimePublicController(ShowTimeService showTimeService) {
-        this.showTimeService = showTimeService;
+    public ShowtimePublicController(ShowtimeService showtimeService) {
+        this.showtimeService = showtimeService;
     }
 
     @GetMapping
     public ResponseEntity<List<ShowtimeResponse>> getUpcoming(@PathVariable Long movieId) {
-        List<ShowtimeResponse> responses = showTimeService.getUpcomingShowtimes(movieId).stream()
+        List<ShowtimeResponse> responses = showtimeService.getUpcomingShowtimes(movieId).stream()
                 .map(ShowtimeResponse::from)
                 .toList();
         return ResponseEntity.ok(responses);

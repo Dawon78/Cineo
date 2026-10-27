@@ -1,6 +1,6 @@
 package com.dw.movie.showtime.controller;
 
-import com.dw.movie.showtime.service.ShowTimeService;
+import com.dw.movie.showtime.service.ShowtimeService;
 import com.dw.movie.showtime.dto.ShowtimeRegisterRequest;
 import com.dw.movie.showtime.dto.ShowtimeResponse;
 import com.dw.movie.showtime.entity.Showtime;
@@ -16,16 +16,16 @@ import java.util.List;
 @RequestMapping("/api/admin/showtimes")
 public class ShowtimeController {
 
-    private final ShowTimeService showTimeService;
+    private final ShowtimeService showtimeService;
 
-    public ShowtimeController(ShowTimeService showTimeService){
-        this.showTimeService = showTimeService;
+    public ShowtimeController(ShowtimeService showtimeService){
+        this.showtimeService = showtimeService;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ShowtimeResponse> register(@Valid @RequestBody ShowtimeRegisterRequest request) {
-        Showtime showtime = showTimeService.createShowtime(
+        Showtime showtime = showtimeService.createShowtime(
                 request.getMovieId(),
                 request.getScreenId(),
                 request.getFormat(),
@@ -38,7 +38,7 @@ public class ShowtimeController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<ShowtimeResponse>> getAll() {
-        List<ShowtimeResponse> responses = showTimeService.getAllShowtimes().stream()
+        List<ShowtimeResponse> responses = showtimeService.getAllShowtimes().stream()
                 .map(ShowtimeResponse::from)
                 .toList();
         return ResponseEntity.ok(responses);
