@@ -9,8 +9,11 @@ import com.dw.movie.screen.service.ScreenService;
 import com.dw.movie.showtime.entity.ShowtimeFormat;
 import com.dw.movie.showtime.repository.ShowtimeRepository;
 import com.dw.movie.showtime.service.ShowTimeService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -21,6 +24,8 @@ import java.util.List;
 @Component
 @Profile("local")
 public class LocalDataInitializer implements CommandLineRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(LocalDataInitializer.class);
 
     private static final List<Long> TMDB_IDS = List.of(27205L, 157336L, 438631L);
     private static final List<LocalTime> START_TIMES = List.of(
@@ -53,16 +58,20 @@ public class LocalDataInitializer implements CommandLineRunner {
 
         for (Long tmdbId : TMDB_IDS) {
             if (!movieRepository.existsByTmdbId(tmdbId)) {
-                movieService.registerMovie(tmdbId);
+                try {
+                    movieService.registerMovie(tmdbId);
+                } catch (RuntimeException e) {
+                    log.warn("TMDB 영화 등록 실패, 건너뜀 (tmdbId={}): {}", tmdbId, e.getMessage());
+                }
             }
         }
-        List<Movie> movies = movieRepository.findAll();
+        List<Movie> movies = movieRepository.findAll(Sort.by("id"));
 
-        List<Screen> screens = screenRepository.findAll();
+        List<Screen> screens = screenRepository.findAll(Sort.by("id"));
         for (int i = screens.size(); i < movies.size(); i++) {
             screenService.createScreen((i + 1) + "관", 8, 10);
         }
-        screens = screenRepository.findAll();
+        screens = screenRepository.findAll(Sort.by("id"));
 
         LocalDate tomorrow = LocalDate.now().plusDays(1);
         for (int i = 0; i < movies.size(); i++) {
