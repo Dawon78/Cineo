@@ -41,8 +41,11 @@ public class TmdbClient {
         } catch (HttpClientErrorException.NotFound e) {
             throw new TmdbMovieNotFoundException("TMDB에서 해당 영화를 찾을 수 없습니다: " + tmdbId);
         }
+        if (detail == null) {
+            throw new TmdbMovieNotFoundException("TMDB에서 해당 영화를 찾을 수 없습니다: " + tmdbId);
+        }
 
-        String posterUrl = (detail != null && detail.posterPath() != null)
+        String posterUrl = detail.posterPath() != null
                 ? "https://image.tmdb.org/t/p/w500" + detail.posterPath()
                 : null;
 
