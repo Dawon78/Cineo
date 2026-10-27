@@ -1,6 +1,7 @@
 package com.dw.movie.config;
 
 import com.dw.movie.auth.jwt.JwtTokenProvider;
+import com.dw.movie.auth.jwt.JwtTokenProvider.AccessTokenInfo;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,13 +27,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String token = resolveToken(request);
+        AccessTokenInfo tokenInfo = token == null ? null : jwtTokenProvider.parseAccessToken(token);
 
-        if (token != null && jwtTokenProvider.validateToken(token) && jwtTokenProvider.isAccessToken(token)) {
-            Long memberId = jwtTokenProvider.getMemberId(token);
-            String role = jwtTokenProvider.getRole(token);
-
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(memberId, null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
+        if (tokenInfo != null) {
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    tokenInfo.memberId(), null, List.of(new SimpleGrantedAuthority("ROLE_" + tokenInfo.role())));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }

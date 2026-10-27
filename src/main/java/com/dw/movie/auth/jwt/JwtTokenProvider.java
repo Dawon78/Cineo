@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
@@ -23,7 +24,7 @@ public class JwtTokenProvider {
             @Value("${jwt.access-token-validity}") long accessTokenValidity,
             @Value("${jwt.refresh-token-validity}") long refreshTokenValidity
     ) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenValidity = accessTokenValidity;
         this.refreshTokenValidity = refreshTokenValidity;
     }
@@ -56,44 +57,39 @@ public class JwtTokenProvider {
     }
 
     public Long getMemberId(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-
-        return claims.get("memberId", Long.class);
+        return parseClaims(token).get("memberId", Long.class);
     }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parser()
-                    .verifyWith(key)
-                    .build()
-                    .parseSignedClaims(token);
+            parseClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }
 
-    public boolean isAccessToken(String token) {
-        Claims claims = Jwts.parser()
+    // 요청마다 필터가 부른다. 서명 검증은 한 번만 하고, 거기서 꺼낸 값으로 회원 id와 권한을 함께 돌려준다
+    // 위조·만료된 토큰이거나 refresh 토큰이면 null
+    public AccessTokenInfo parseAccessToken(String token) {
+        try {
+            Claims claims = parseClaims(token);
+            if (!"access".equals(claims.get("type", String.class))) {
+                return null;
+            }
+            return new AccessTokenInfo(claims.get("memberId", Long.class), claims.get("role", String.class));
+        } catch (JwtException | IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private Claims parseClaims(String token) {
+        return Jwts.parser()
                 .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-
-        return "access".equals(claims.get("type", String.class));
     }
 
-    public String getRole(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-
-        return claims.get("role", String.class);
-    }
+    public record AccessTokenInfo(Long memberId, String role) {}
 }
