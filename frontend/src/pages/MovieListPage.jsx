@@ -25,14 +25,23 @@ function MovieListPage() {
     }, [])
 
     return (
-        <div>
-            <h2>상영 중인 영화</h2>
-            {loading && <p>영화를 불러오는 중...</p>}
-            {error && <p>{error}</p>}
-            {movies.map(movie => (
-                <MovieCard key={movie.id} id={movie.id} title={movie.title} runtime={movie.runningTime} />
-            ))}
-        </div>
+        <section>
+            <h1 className="page-title">상영 중인 영화</h1>
+            {loading && <p className="notice">영화를 불러오는 중...</p>}
+            {error && <p className="notice notice-error">{error}</p>}
+            <div className="movie-grid">
+                {movies.map(movie => (
+                    <MovieCard
+                        key={movie.id}
+                        id={movie.id}
+                        title={movie.title}
+                        runtime={movie.runningTime}
+                        posterUrl={movie.posterUrl}
+                        ageRating={movie.ageRating}
+                    />
+                ))}
+            </div>
+        </section>
     )
 }
 

@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router'
 
+function formatTime(dateTime) {
+    return new Date(dateTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })
+}
+
+function formatDay(date) {
+    return new Date(`${date}T00:00:00`).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
+}
+
 function MovieDetailPage() {
     const { movieId } = useParams()
     const [movie, setMovie] = useState(null)
@@ -29,32 +37,48 @@ function MovieDetailPage() {
     }, [movieId])
 
     if (error) {
-        return <p>{error}</p>
+        return <p className="notice notice-error">{error}</p>
     }
 
     if (movie === null) {
-        return <p>불러오는 중...</p>
+        return <p className="notice">불러오는 중...</p>
     }
 
-    return (
-        <div>
-            <img src={movie.posterUrl} alt={movie.title} width={200} />
-            <h2>{movie.title}</h2>
-            <p>{movie.overView}</p>
+    const days = [...new Set(showtimes.map(showtime => showtime.startTime.slice(0, 10)))]
 
-            <h3>상영시간</h3>
-            {showtimes.length === 0 && <p>상영 예정이 없어요</p>}
-            {showtimes.map(showtime => (
-                <div key={showtime.id}>
-                    <Link to={`/showtimes/${showtime.id}/seats`}>
-                        {new Date(showtime.startTime).toLocaleString('ko-KR', {
-                            month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
-                        })}
-                        {' · '}{showtime.screenName} · {showtime.basePrice.toLocaleString()}원
-                    </Link>
-                </div>
-            ))}
-        </div>
+    return (
+        <article className="movie-detail">
+            <img className="movie-detail-poster" src={movie.posterUrl} alt={`${movie.title} 포스터`} />
+            <div>
+                <h1 className="movie-detail-title">{movie.title}</h1>
+                <p className="movie-overview">{movie.overView}</p>
+
+                <h2 className="section-title">상영시간 선택</h2>
+                {showtimes.length === 0 && <p className="notice">상영 예정이 없어요. 다른 영화를 골라 주세요.</p>}
+                {days.map(day => (
+                    <div key={day} className="showtime-day">
+                        <p className="showtime-day-label">{formatDay(day)}</p>
+                        <div className="showtime-list">
+                            {showtimes
+                                .filter(showtime => showtime.startTime.startsWith(day))
+                                .map(showtime => (
+                                    <Link
+                                        key={showtime.id}
+                                        to={`/showtimes/${showtime.id}/seats`}
+                                        className="showtime-chip"
+                                    >
+                                        <span className="showtime-time">{formatTime(showtime.startTime)}</span>
+                                        <span className="showtime-sub">
+                                            ~{formatTime(showtime.endTime)} {showtime.screenName}
+                                        </span>
+                                        <span className="showtime-sub">{showtime.basePrice.toLocaleString()}원</span>
+                                    </Link>
+                                ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </article>
     )
 }
 
