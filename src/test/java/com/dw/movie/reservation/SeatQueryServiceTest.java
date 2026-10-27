@@ -2,6 +2,7 @@ package com.dw.movie.reservation;
 
 import com.dw.movie.common.exception.InvalidSeatSelectionException;
 import com.dw.movie.common.exception.SeatAlreadyReservedException;
+import com.dw.movie.common.exception.ShowtimeAlreadyStartedException;
 import com.dw.movie.reservation.entity.ReservationStatus;
 import com.dw.movie.reservation.repository.ReservationSeatRepository;
 import com.dw.movie.reservation.service.SeatHoldService;
@@ -23,6 +24,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -107,5 +109,15 @@ class SeatQueryServiceTest {
     void 같은_좌석을_중복으로_보내면_선택할_수_없다() {
         assertThrows(InvalidSeatSelectionException.class,
                 () -> seatQueryService.validateSelectable(showtime, List.of(5L, 5L)));
+    }
+
+    @Test
+    void 이미_시작된_상영의_좌석은_잡을_수_없다() {
+        Showtime started = new Showtime(null, screen1, ShowtimeFormat.TWO_D, LocalDateTime.now().minusMinutes(1),
+                LocalDateTime.now().plusMinutes(119), 10000L);
+        given(showtimeRepository.findById(1L)).willReturn(Optional.of(started));
+
+        assertThrows(ShowtimeAlreadyStartedException.class,
+                () -> seatQueryService.validateHoldable(1L, List.of(5L)));
     }
 }

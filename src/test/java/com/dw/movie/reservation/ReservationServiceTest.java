@@ -73,7 +73,8 @@ class ReservationServiceTest {
     @Test
     void 상영이_시작된_예약은_취소할_수_없고_환불도_호출되지_않는다() {
         Member member = memberWithId(1L);
-        Reservation reservation = new Reservation(member, showtimeStartingAt(LocalDateTime.now().minusMinutes(1)), 10000L);
+        Reservation reservation = new Reservation(member, showtimeStartingAt(LocalDateTime.now().minusMinutes(1)));
+        reservation.addSeat(standardSeat(), 10000L);
         given(reservationRepository.findById(10L)).willReturn(Optional.of(reservation));
 
         assertThrows(ShowtimeAlreadyStartedException.class, () -> reservationService.cancel(1L, 10L));
@@ -86,7 +87,8 @@ class ReservationServiceTest {
     void 정상_취소하면_환불이_호출되고_누적결제금액과_포인트가_복구된다() {
         Member member = memberWithId(1L);
         long earned = member.recordPayment(10000L);
-        Reservation reservation = new Reservation(member, showtimeStartingAt(LocalDateTime.now().plusDays(1)), 10000L);
+        Reservation reservation = new Reservation(member, showtimeStartingAt(LocalDateTime.now().plusDays(1)));
+        reservation.addSeat(standardSeat(), 10000L);
         reservation.applyPayment("imp_1", 10000L);
         reservation.applyEarnedPoints(earned);
         given(reservationRepository.findById(10L)).willReturn(Optional.of(reservation));
@@ -125,6 +127,22 @@ class ReservationServiceTest {
                 () -> reservationService.confirm(1L, 1L, List.of(5L), "imp_1"));
 
         verify(portOneClient).cancelPayment("imp_1", "결제 금액 불일치로 인한 자동 환불");
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
+    void 결제하는_사이_상영이_시작됐으면_자동환불하고_예외를_던진다() {
+        Seat seat = standardSeat();
+        given(memberRepository.findByIdForUpdate(1L)).willReturn(Optional.of(memberWithId(1L)));
+        given(showtimeRepository.findByIdForUpdate(1L)).willReturn(Optional.of(showtimeStartingAt(LocalDateTime.now().minusMinutes(1))));
+        given(reservationRepository.existsByImpUid("imp_1")).willReturn(false);
+        given(seatQueryService.validateSeatShape(any(), any())).willReturn(List.of(seat));
+        given(portOneClient.getPaymentInfo("imp_1")).willReturn(new PortOneClient.PaymentInfo("imp_1", 10000L, "paid"));
+
+        assertThrows(ShowtimeAlreadyStartedException.class,
+                () -> reservationService.confirm(1L, 1L, List.of(5L), "imp_1"));
+
+        verify(portOneClient).cancelPayment("imp_1", "상영 시작으로 인한 자동 환불");
         verify(reservationRepository, never()).save(any());
     }
 

@@ -30,6 +30,7 @@ public class ReservationService {
     private static final String SEAT_FAILURE_REFUND_REASON = "좌석 확보 실패로 인한 자동 환불";
     private static final String AMOUNT_MISMATCH_REFUND_REASON = "결제 금액 불일치로 인한 자동 환불";
     private static final String LOOKUP_FAILURE_REFUND_REASON = "결제 확인 실패로 인한 자동 환불";
+    private static final String SHOWTIME_STARTED_REFUND_REASON = "상영 시작으로 인한 자동 환불";
 
     private final ReservationRepository reservationRepository;
     private final ShowtimeRepository showtimeRepository;
@@ -57,19 +58,18 @@ public class ReservationService {
                 .orElseThrow(() -> new MemberNotFoundException("해당 회원을 찾을 수 없습니다."));
         Showtime showtime = showtimeRepository.findByIdForUpdate(showtimeId)
                 .orElseThrow(() -> new ShowtimeNotFoundException("해당 상영시간표를 찾을 수 없습니다."));
-        if (!showtime.getStartTime().isAfter(LocalDateTime.now())) {
-            throw new ShowtimeAlreadyStartedException("이미 시작된 상영시간표입니다.");
-        }
         if (reservationRepository.existsByImpUid(impUid)) {
             throw new PaymentVerificationFailedException("이미 사용된 결제입니다: " + impUid);
         }
 
         List<Seat> seats = seatQueryService.validateSeatShape(showtime, seatIds);
 
-        long totalPrice = 0L;
+        // 아직 저장하지 않은 객체라 아래 검증에서 실패하면 그냥 버려진다
+        Reservation reservation = new Reservation(member, showtime);
         for (Seat seat : seats) {
-            totalPrice += SeatPriceCalculator.calculate(showtime.getBasePrice(), seat.getGrade(), showtime.getFormat());
+            reservation.addSeat(seat, SeatPriceCalculator.calculate(showtime.getBasePrice(), seat.getGrade(), showtime.getFormat()));
         }
+        long totalPrice = reservation.getTotalPrice();
 
         PortOneClient.PaymentInfo paymentInfo;
         try {
@@ -85,6 +85,11 @@ public class ReservationService {
             refundAfterFailure(impUid, AMOUNT_MISMATCH_REFUND_REASON);
             throw new PaymentVerificationFailedException("결제 금액이 일치하지 않습니다. 결제는 자동으로 환불되었습니다.");
         }
+        // 좌석을 잡을 땐 시작 전이었어도 결제창에 머무는 사이 시작될 수 있다. 이미 돈이 나갔으니 환불하고 거절한다
+        if (!showtime.getStartTime().isAfter(LocalDateTime.now())) {
+            refundAfterFailure(impUid, SHOWTIME_STARTED_REFUND_REASON);
+            throw new ShowtimeAlreadyStartedException("이미 시작된 상영시간표입니다. 결제는 자동으로 환불되었습니다.");
+        }
 
         try {
             seatQueryService.validateNotReserved(showtime, seatIds);
@@ -97,12 +102,6 @@ public class ReservationService {
             throw new SeatAlreadyHeldException(e.getMessage() + " 결제는 자동으로 환불되었습니다.");
         }
 
-        Reservation reservation = new Reservation(member, showtime, 0L);
-        for (Seat seat : seats) {
-            long price = SeatPriceCalculator.calculate(showtime.getBasePrice(), seat.getGrade(), showtime.getFormat());
-            reservation.addSeat(seat, price);
-        }
-        reservation.applyTotalPrice(totalPrice);
         reservation.applyPayment(impUid, paymentInfo.amount());
         reservation.applyEarnedPoints(member.recordPayment(totalPrice));
 

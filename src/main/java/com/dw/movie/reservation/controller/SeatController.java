@@ -1,14 +1,10 @@
 package com.dw.movie.reservation.controller;
 
-import com.dw.movie.common.exception.ShowtimeAlreadyStartedException;
-import com.dw.movie.common.exception.ShowtimeNotFoundException;
 import com.dw.movie.reservation.service.SeatHoldService;
 import com.dw.movie.reservation.service.SeatQueryService;
 import com.dw.movie.reservation.dto.SeatHoldRequest;
 import com.dw.movie.reservation.dto.SeatPriceResponse;
 import com.dw.movie.reservation.dto.SeatStatusResponse;
-import com.dw.movie.showtime.entity.Showtime;
-import com.dw.movie.showtime.repository.ShowtimeRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
@@ -16,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -25,12 +20,10 @@ public class SeatController {
 
     private final SeatQueryService seatQueryService;
     private final SeatHoldService seatHoldService;
-    private final ShowtimeRepository showtimeRepository;
 
-    public SeatController(SeatQueryService seatQueryService, SeatHoldService seatHoldService, ShowtimeRepository showtimeRepository) {
+    public SeatController(SeatQueryService seatQueryService, SeatHoldService seatHoldService) {
         this.seatQueryService = seatQueryService;
         this.seatHoldService = seatHoldService;
-        this.showtimeRepository = showtimeRepository;
     }
 
     @GetMapping("/{showtimeId}/seats")
@@ -41,13 +34,7 @@ public class SeatController {
     @PostMapping("/{showtimeId}/seats/hold")
     public ResponseEntity<Void> holdSeats(@PathVariable Long showtimeId, @Valid @RequestBody SeatHoldRequest request,
                                           @AuthenticationPrincipal Long memberId) {
-        Showtime showtime = showtimeRepository.findById(showtimeId)
-                .orElseThrow(() -> new ShowtimeNotFoundException("해당 상영시간표를 찾을 수 없습니다."));
-        if (showtime.getStartTime().isBefore(LocalDateTime.now())) {
-            throw new ShowtimeAlreadyStartedException("이미 시작된 상영시간표입니다.");
-        }
-
-        seatQueryService.validateSelectable(showtime, request.getSeatIds());
+        seatQueryService.validateHoldable(showtimeId, request.getSeatIds());
         seatHoldService.hold(showtimeId, request.getSeatIds(), memberId);
         return ResponseEntity.ok().build();
     }

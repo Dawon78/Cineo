@@ -2,6 +2,7 @@ package com.dw.movie.reservation.service;
 
 import com.dw.movie.common.exception.InvalidSeatSelectionException;
 import com.dw.movie.common.exception.SeatAlreadyReservedException;
+import com.dw.movie.common.exception.ShowtimeAlreadyStartedException;
 import com.dw.movie.common.exception.ShowtimeNotFoundException;
 import com.dw.movie.reservation.entity.SeatStatus;
 import com.dw.movie.reservation.dto.SeatPriceCalculator;
@@ -14,6 +15,7 @@ import com.dw.movie.showtime.entity.Showtime;
 import com.dw.movie.showtime.repository.ShowtimeRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -67,6 +69,16 @@ public class SeatQueryService {
         return SeatStatus.AVAILABLE;
     }
 
+    // 좌석을 잡기 전 검사: 상영시간이 있는지, 아직 시작 전인지, 고른 좌석이 선택 가능한지
+    public void validateHoldable(Long showtimeId, List<Long> seatIds) {
+        Showtime showtime = showtimeRepository.findById(showtimeId)
+                .orElseThrow(() -> new ShowtimeNotFoundException("해당 상영시간표를 찾을 수 없습니다."));
+        if (!showtime.getStartTime().isAfter(LocalDateTime.now())) {
+            throw new ShowtimeAlreadyStartedException("이미 시작된 상영시간표입니다.");
+        }
+        validateSelectable(showtime, seatIds);
+    }
+
     public List<Seat> validateSelectable(Showtime showtime, List<Long> seatIds) {
         List<Seat> seats = validateSeatShape(showtime, seatIds);
         validateNotReserved(showtime, seatIds);
@@ -101,15 +113,15 @@ public class SeatQueryService {
         }
     }
 
-    public Long calculateTotalPrice(Long showtimeId, List<Long> seatIds){
+    public Long calculateTotalPrice(Long showtimeId, List<Long> seatIds) {
         Showtime showtime = showtimeRepository.findById(showtimeId)
-                .orElseThrow(()-> new ShowtimeNotFoundException("해당 상영시간표를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ShowtimeNotFoundException("해당 상영시간표를 찾을 수 없습니다."));
         List<Seat> seats = seatRepository.findAllById(seatIds);
 
         long totalPrice = 0L;
         for (Seat seat : seats) {
             totalPrice += SeatPriceCalculator.calculate(showtime.getBasePrice(), seat.getGrade(), showtime.getFormat());
         }
-            return totalPrice;
-        }
+        return totalPrice;
     }
+}

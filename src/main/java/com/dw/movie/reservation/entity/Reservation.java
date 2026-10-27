@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -36,11 +37,14 @@ public class Reservation {
     private Long paidAmount;
     private Long earnedPoints;
 
-    public Reservation(Member member, Showtime showtime, Long totalPrice){
+    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL)
+    private List<ReservationSeat> seats = new ArrayList<>();
+
+    public Reservation(Member member, Showtime showtime){
         this.member = member;
         this.showtime = showtime;
         this.status = ReservationStatus.CONFIRMED;
-        this.totalPrice = totalPrice;
+        this.totalPrice = 0L;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -49,15 +53,10 @@ public class Reservation {
         this.canceledAt = LocalDateTime.now();
     }
 
-    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL)
-    private List<ReservationSeat> seats = new java.util.ArrayList<>();
-
+    // 좌석을 담을 때 총액도 같이 올려서, 좌석 가격 합계와 총액이 항상 같게 유지한다
     public void addSeat(Seat seat, long price) {
         this.seats.add(new ReservationSeat(this, seat, price));
-    }
-
-    public void applyTotalPrice(long totalPrice) {
-        this.totalPrice = totalPrice;
+        this.totalPrice += price;
     }
 
     public void applyEarnedPoints(long earnedPoints) {
