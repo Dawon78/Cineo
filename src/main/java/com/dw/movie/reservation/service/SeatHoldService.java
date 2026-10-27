@@ -25,7 +25,8 @@ public class SeatHoldService {
         return Boolean.TRUE.equals(redisTemplate.hasKey(key(showtimeId, seatId)));
     }
 
-    public void hold(Long showtimeId, List<Long> seatIds, Long memberId) {
+    // 모두 잡으면 선점 유지 시간(초)을 돌려준다. 화면 타이머가 이 값을 기준으로 센다
+    public long hold(Long showtimeId, List<Long> seatIds, Long memberId) {
         List<String> succeededKeys = new ArrayList<>();
         for (Long seatId : seatIds) {
             String key = key(showtimeId, seatId);
@@ -38,6 +39,7 @@ public class SeatHoldService {
                 throw new SeatAlreadyHeldException("이미 선점된 좌석입니다: " + seatId);
             }
         }
+        return HOLD_TTL.toSeconds();
     }
 
     public void release(Long showtimeId, List<Long> seatIds, Long memberId) {

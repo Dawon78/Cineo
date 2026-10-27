@@ -11,9 +11,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
+import java.time.Duration;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.lenient;
@@ -31,6 +33,15 @@ class SeatHoldServiceTest {
     @BeforeEach
     void setUp() {
         lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+    }
+
+    @Test
+    void 좌석을_선점하면_남은_시간을_초로_돌려준다() {
+        given(valueOperations.setIfAbsent("seat-hold:1:5", "1", Duration.ofMinutes(5))).willReturn(true);
+
+        long expiresInSeconds = seatHoldService.hold(1L, List.of(5L), 1L);
+
+        assertEquals(300L, expiresInSeconds);
     }
 
     @Test

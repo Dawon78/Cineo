@@ -3,6 +3,7 @@ package com.dw.movie.reservation.controller;
 import com.dw.movie.reservation.service.SeatHoldService;
 import com.dw.movie.reservation.service.SeatQueryService;
 import com.dw.movie.reservation.dto.SeatHoldRequest;
+import com.dw.movie.reservation.dto.SeatHoldResponse;
 import com.dw.movie.reservation.dto.SeatPriceResponse;
 import com.dw.movie.reservation.dto.SeatStatusResponse;
 import jakarta.validation.Valid;
@@ -32,11 +33,11 @@ public class SeatController {
     }
 
     @PostMapping("/{showtimeId}/seats/hold")
-    public ResponseEntity<Void> holdSeats(@PathVariable Long showtimeId, @Valid @RequestBody SeatHoldRequest request,
-                                          @AuthenticationPrincipal Long memberId) {
+    public ResponseEntity<SeatHoldResponse> holdSeats(@PathVariable Long showtimeId, @Valid @RequestBody SeatHoldRequest request,
+                                                      @AuthenticationPrincipal Long memberId) {
         seatQueryService.validateHoldable(showtimeId, request.getSeatIds());
-        seatHoldService.hold(showtimeId, request.getSeatIds(), memberId);
-        return ResponseEntity.ok().build();
+        long expiresInSeconds = seatHoldService.hold(showtimeId, request.getSeatIds(), memberId);
+        return ResponseEntity.ok(new SeatHoldResponse(expiresInSeconds));
     }
 
     @DeleteMapping("/{showtimeId}/seats/hold")
