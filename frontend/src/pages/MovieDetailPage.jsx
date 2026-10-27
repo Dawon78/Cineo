@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router'
+import { useParams, Link } from 'react-router'
 
 function MovieDetailPage() {
     const { movieId } = useParams()
@@ -46,10 +46,12 @@ function MovieDetailPage() {
             {showtimes.length === 0 && <p>상영 예정이 없어요</p>}
             {showtimes.map(showtime => (
                 <div key={showtime.id}>
-                    {new Date(showtime.startTime).toLocaleString('ko-KR', {
-                        month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
-                    })}
-                    {' · '}{showtime.screenName} · {showtime.basePrice.toLocaleString()}원
+                    <Link to={`/showtimes/${showtime.id}/seats`}>
+                        {new Date(showtime.startTime).toLocaleString('ko-KR', {
+                            month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                        })}
+                        {' · '}{showtime.screenName} · {showtime.basePrice.toLocaleString()}원
+                    </Link>
                 </div>
             ))}
         </div>

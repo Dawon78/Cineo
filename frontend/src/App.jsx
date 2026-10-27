@@ -3,6 +3,7 @@ import './App.css'
 import MovieListPage from './pages/MovieListPage'
 import LoginPage from './pages/LoginPage'
 import MovieDetailPage from './pages/MovieDetailPage'
+import SeatPage from './pages/SeatPage'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/" element={<MovieListPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/movies/:movieId" element={<MovieDetailPage />} />
+        <Route path="/showtimes/:showtimeId/seats" element={<SeatPage />} />
       </Routes>
     </div>
   )
