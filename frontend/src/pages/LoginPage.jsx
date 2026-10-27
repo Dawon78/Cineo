@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useLocation, Link } from 'react-router'
 
 function LoginPage() {
-    const [email, setEmail] = useState('')
+    const location = useLocation()
+    const signedUpEmail = location.state?.signedUpEmail
+    const [email, setEmail] = useState(signedUpEmail ?? '')
     const [password, setPassword] = useState('')
     const [message, setMessage] = useState('')
     const navigate = useNavigate()
@@ -35,24 +37,34 @@ function LoginPage() {
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            <h2>로그인</h2>
-            <input
-                type="email"
-                required
-                placeholder="이메일"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-            />
-            <input
-                type="password"
-                required
-                placeholder="비밀번호"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-            />
-            <button type="submit">로그인</button>
-            {message && <p>{message}</p>}
+        <form className="auth-card" onSubmit={handleSubmit}>
+            <h1 className="page-title">로그인</h1>
+            {signedUpEmail && <p className="notice">가입이 완료됐어요. 로그인해 주세요.</p>}
+            <label className="field">
+                <span>이메일</span>
+                <input
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                />
+            </label>
+            <label className="field">
+                <span>비밀번호</span>
+                <input
+                    type="password"
+                    required
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                />
+            </label>
+            <button type="submit" className="btn btn-primary">로그인</button>
+            {message && <p className="auth-message is-error">{message}</p>}
+            <p className="auth-switch">
+                계정이 없나요? <Link to="/signup">회원가입</Link>
+            </p>
         </form>
     )
 }
