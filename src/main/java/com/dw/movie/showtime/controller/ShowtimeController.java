@@ -32,27 +32,15 @@ public class ShowtimeController {
                 request.getStartTime(),
                 request.getBasePrice()
         );
-        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(showtime));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ShowtimeResponse.from(showtime));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<ShowtimeResponse>> getAll() {
         List<ShowtimeResponse> responses = showTimeService.getAllShowtimes().stream()
-                .map(this::toResponse)
+                .map(ShowtimeResponse::from)
                 .toList();
         return ResponseEntity.ok(responses);
-    }
-
-    private ShowtimeResponse toResponse(Showtime showtime) {
-        return new ShowtimeResponse(
-                showtime.getId(),
-                showtime.getMovie().getTitle(),
-                showtime.getScreen().getName(),
-                showtime.getFormat(),
-                showtime.getStartTime(),
-                showtime.getEndTime(),
-                showtime.getBasePrice()
-        );
     }
 }

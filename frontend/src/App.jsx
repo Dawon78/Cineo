@@ -1,4 +1,5 @@
-import { Routes, Route, Link, NavLink, useLocation, useNavigate } from 'react-router'
+import { useSyncExternalStore } from 'react'
+import { Routes, Route, Link, NavLink, useNavigate } from 'react-router'
 import './App.css'
 import MovieListPage from './pages/MovieListPage'
 import LoginPage from './pages/LoginPage'
@@ -7,13 +8,16 @@ import SeatPage from './pages/SeatPage'
 import PaymentPage from './pages/PaymentPage'
 import SignupPage from './pages/SignupPage'
 import MyPage from './pages/MyPage'
-import { getAccessToken, clearTokens } from './auth'
+import { getAccessToken, clearTokens, subscribeAuth } from './auth'
 import { apiFetch } from './api/client'
 
+function isLoggedIn() {
+  return getAccessToken() !== null
+}
+
 function App() {
-  useLocation()
   const navigate = useNavigate()
-  const loggedIn = getAccessToken() !== null
+  const loggedIn = useSyncExternalStore(subscribeAuth, isLoggedIn)
 
   async function handleLogout() {
     try {

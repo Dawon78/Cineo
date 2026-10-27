@@ -2,6 +2,9 @@ import { getAccessToken, getRefreshToken, saveTokens, clearTokens } from '../aut
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8082'
 
+// 토큰 없이 쓰는 인증 요청이라 401이 와도 재발급하면 안 되는 경로 (예: 비밀번호가 틀린 로그인)
+const NO_REFRESH_PATHS = ['/api/auth/login', '/api/auth/signup', '/api/auth/refresh']
+
 // 여러 요청이 동시에 401을 받아도 토큰 재발급은 한 번만 하도록 진행 중인 재발급을 공유한다
 let refreshing = null
 
@@ -42,7 +45,7 @@ function send(path, { body, headers, ...options }) {
 
 export async function apiFetch(path, options = {}) {
   const response = await send(path, options)
-  if (response.status !== 401 || !getAccessToken() || path.startsWith('/api/auth/')) {
+  if (response.status !== 401 || !getAccessToken() || NO_REFRESH_PATHS.includes(path)) {
     return response
   }
 

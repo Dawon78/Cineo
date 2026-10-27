@@ -6,6 +6,8 @@ import com.dw.movie.common.exception.SeatAlreadyHeldException;
 import com.dw.movie.common.exception.SeatAlreadyReservedException;
 import com.dw.movie.common.exception.ShowtimeAlreadyStartedException;
 import com.dw.movie.payment.exception.PaymentVerificationFailedException;
+import com.dw.movie.payment.exception.PortOneApiException;
+import com.dw.movie.payment.exception.RefundFailedException;
 import com.dw.movie.payment.client.PortOneClient;
 import com.dw.movie.reservation.entity.Reservation;
 import com.dw.movie.reservation.entity.ReservationStatus;
@@ -111,7 +113,7 @@ class ReservationServiceTest {
     }
 
     @Test
-    void 결제금액이_다르면_환불하지_않고_예외를_던진다() {
+    void 결제금액이_다르면_자동환불하고_예외를_던진다() {
         Seat seat = standardSeat();
         given(memberRepository.findByIdForUpdate(1L)).willReturn(Optional.of(memberWithId(1L)));
         given(showtimeRepository.findByIdForUpdate(1L)).willReturn(Optional.of(showtimeStartingAt(LocalDateTime.now().plusDays(1))));
@@ -122,7 +124,41 @@ class ReservationServiceTest {
         assertThrows(PaymentVerificationFailedException.class,
                 () -> reservationService.confirm(1L, 1L, List.of(5L), "imp_1"));
 
-        verify(portOneClient, never()).cancelPayment(any(), any());
+        verify(portOneClient).cancelPayment("imp_1", "결제 금액 불일치로 인한 자동 환불");
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
+    void 결제조회가_실패하면_자동환불을_시도하고_예외를_던진다() {
+        Seat seat = standardSeat();
+        given(memberRepository.findByIdForUpdate(1L)).willReturn(Optional.of(memberWithId(1L)));
+        given(showtimeRepository.findByIdForUpdate(1L)).willReturn(Optional.of(showtimeStartingAt(LocalDateTime.now().plusDays(1))));
+        given(reservationRepository.existsByImpUid("imp_1")).willReturn(false);
+        given(seatQueryService.validateSeatShape(any(), any())).willReturn(List.of(seat));
+        given(portOneClient.getPaymentInfo("imp_1")).willThrow(new PortOneApiException("포트원 결제 조회에 실패했습니다."));
+
+        assertThrows(PortOneApiException.class,
+                () -> reservationService.confirm(1L, 1L, List.of(5L), "imp_1"));
+
+        verify(portOneClient).cancelPayment("imp_1", "결제 확인 실패로 인한 자동 환불");
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
+    void 결제조회_실패_후_환불도_실패하면_원래_조회_실패_예외를_던진다() {
+        Seat seat = standardSeat();
+        given(memberRepository.findByIdForUpdate(1L)).willReturn(Optional.of(memberWithId(1L)));
+        given(showtimeRepository.findByIdForUpdate(1L)).willReturn(Optional.of(showtimeStartingAt(LocalDateTime.now().plusDays(1))));
+        given(reservationRepository.existsByImpUid("imp_1")).willReturn(false);
+        given(seatQueryService.validateSeatShape(any(), any())).willReturn(List.of(seat));
+        given(portOneClient.getPaymentInfo("imp_1")).willThrow(new PortOneApiException("포트원 결제 조회에 실패했습니다."));
+        doThrow(new RefundFailedException("포트원 환불 요청에 실패했습니다."))
+                .when(portOneClient).cancelPayment(any(), any());
+
+        assertThrows(PortOneApiException.class,
+                () -> reservationService.confirm(1L, 1L, List.of(5L), "imp_1"));
+
+        verify(reservationRepository, never()).save(any());
     }
 
     @Test

@@ -52,7 +52,8 @@ public class LocalDataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (showtimeRepository.existsByStartTimeAfter(LocalDateTime.now())) {
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        if (showtimeRepository.existsByStartTimeAfter(tomorrow.atStartOfDay())) {
             return;
         }
 
@@ -73,7 +74,6 @@ public class LocalDataInitializer implements CommandLineRunner {
         }
         screens = screenRepository.findAll(Sort.by("id"));
 
-        LocalDate tomorrow = LocalDate.now().plusDays(1);
         for (int i = 0; i < movies.size(); i++) {
             Movie movie = movies.get(i);
             Screen screen = screens.get(i);

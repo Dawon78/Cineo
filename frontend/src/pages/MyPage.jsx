@@ -14,21 +14,25 @@ function MyPage() {
 
     useEffect(() => {
         async function load() {
-            const [memberRes, reservationRes] = await Promise.all([
-                apiFetch('/api/members/me'),
-                apiFetch('/api/reservations/me'),
-            ])
-            if (memberRes.status === 401 || reservationRes.status === 401) {
-                navigate('/login')
-                return
+            try {
+                const [memberRes, reservationRes] = await Promise.all([
+                    apiFetch('/api/members/me'),
+                    apiFetch('/api/reservations/me'),
+                ])
+                if (memberRes.status === 401 || reservationRes.status === 401) {
+                    navigate('/login')
+                    return
+                }
+                if (!memberRes.ok || !reservationRes.ok) {
+                    setError('내 정보를 불러오지 못했어요')
+                    return
+                }
+                setMember(await memberRes.json())
+                const list = await reservationRes.json()
+                setReservations([...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt)))
+            } catch {
+                setError('서버에 연결할 수 없어요. 잠시 후 다시 시도해 주세요.')
             }
-            if (!memberRes.ok || !reservationRes.ok) {
-                setError('내 정보를 불러오지 못했어요')
-                return
-            }
-            setMember(await memberRes.json())
-            const list = await reservationRes.json()
-            setReservations([...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt)))
         }
         load()
     }, [navigate, reloadKey])
@@ -38,8 +42,16 @@ function MyPage() {
             return
         }
         setCancellingId(reservation.id)
-        const response = await apiFetch(`/api/reservations/${reservation.id}`, { method: 'DELETE' })
-        setCancellingId(null)
+        let response
+        try {
+            response = await apiFetch(`/api/reservations/${reservation.id}`, { method: 'DELETE' })
+        } catch {
+            window.alert('서버에 연결할 수 없어요. 예매 내역을 새로고침해서 취소됐는지 확인해 주세요.')
+            setReloadKey(key => key + 1)
+            return
+        } finally {
+            setCancellingId(null)
+        }
         if (response.status === 401) {
             navigate('/login')
             return

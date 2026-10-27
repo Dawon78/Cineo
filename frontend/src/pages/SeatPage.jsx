@@ -17,16 +17,20 @@ function SeatPage() {
 
     useEffect(() => {
         async function loadSeats() {
-            const response = await apiFetch(`/api/showtimes/${showtimeId}/seats`)
-            if (response.status === 401) {
-                navigate('/login')
-                return
+            try {
+                const response = await apiFetch(`/api/showtimes/${showtimeId}/seats`)
+                if (response.status === 401) {
+                    navigate('/login')
+                    return
+                }
+                if (!response.ok) {
+                    setError('좌석 정보를 불러오지 못했어요')
+                    return
+                }
+                setSeats(await response.json())
+            } catch {
+                setError('서버에 연결할 수 없어요. 잠시 후 다시 시도해 주세요.')
             }
-            if (!response.ok) {
-                setError('좌석 정보를 불러오지 못했어요')
-                return
-            }
-            setSeats(await response.json())
         }
         loadSeats()
     }, [showtimeId, navigate])
@@ -35,16 +39,27 @@ function SeatPage() {
         if (selectedIds.length === 0) {
             return
         }
+        // 좌석을 빠르게 바꾸면 이전 선택의 응답이 늦게 올 수 있어서, 최신 요청이 아닌 응답은 버린다
+        let ignore = false
         async function loadPrice() {
-            const response = await apiFetch(
-                `/api/showtimes/${showtimeId}/seats/price?seatIds=${selectedIds.join(',')}`,
-            )
-            if (response.ok) {
-                const data = await response.json()
-                setTotalPrice(data.totalPrice)
+            try {
+                const response = await apiFetch(
+                    `/api/showtimes/${showtimeId}/seats/price?seatIds=${selectedIds.join(',')}`,
+                )
+                if (response.ok) {
+                    const data = await response.json()
+                    if (!ignore) {
+                        setTotalPrice(data.totalPrice)
+                    }
+                }
+            } catch {
+                // 가격 표시는 참고용이고 결제 화면에서 서버 가격을 다시 확인한다
             }
         }
         loadPrice()
+        return () => {
+            ignore = true
+        }
     }, [showtimeId, selectedIds])
 
     function toggleSeat(seatId) {
@@ -58,11 +73,18 @@ function SeatPage() {
     async function handleReserve() {
         setHolding(true)
         setHoldMessage('')
-        const response = await apiFetch(`/api/showtimes/${showtimeId}/seats/hold`, {
-            method: 'POST',
-            body: { seatIds: selectedIds },
-        })
-        setHolding(false)
+        let response
+        try {
+            response = await apiFetch(`/api/showtimes/${showtimeId}/seats/hold`, {
+                method: 'POST',
+                body: { seatIds: selectedIds },
+            })
+        } catch {
+            setHoldMessage('서버에 연결할 수 없어요. 잠시 후 다시 시도해 주세요.')
+            return
+        } finally {
+            setHolding(false)
+        }
 
         if (response.status === 401) {
             navigate('/login')

@@ -4,6 +4,8 @@ import com.dw.movie.member.entity.Member;
 import com.dw.movie.member.repository.MemberRepository;
 import com.dw.movie.common.exception.*;
 import com.dw.movie.payment.exception.PaymentVerificationFailedException;
+import com.dw.movie.payment.exception.PortOneApiException;
+import com.dw.movie.payment.exception.RefundFailedException;
 import com.dw.movie.payment.client.PortOneClient;
 import com.dw.movie.reservation.entity.ReservationStatus;
 import com.dw.movie.reservation.dto.SeatPriceCalculator;
@@ -13,6 +15,8 @@ import com.dw.movie.screen.entity.Seat;
 import com.dw.movie.screen.repository.SeatRepository;
 import com.dw.movie.showtime.entity.Showtime;
 import com.dw.movie.showtime.repository.ShowtimeRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +25,11 @@ import java.util.List;
 
 @Service
 public class ReservationService {
+
+    private static final Logger log = LoggerFactory.getLogger(ReservationService.class);
+    private static final String SEAT_FAILURE_REFUND_REASON = "좌석 확보 실패로 인한 자동 환불";
+    private static final String AMOUNT_MISMATCH_REFUND_REASON = "결제 금액 불일치로 인한 자동 환불";
+    private static final String LOOKUP_FAILURE_REFUND_REASON = "결제 확인 실패로 인한 자동 환불";
 
     private final ReservationRepository reservationRepository;
     private final ShowtimeRepository showtimeRepository;
@@ -62,22 +71,29 @@ public class ReservationService {
             totalPrice += SeatPriceCalculator.calculate(showtime.getBasePrice(), seat.getGrade(), showtime.getFormat());
         }
 
-        PortOneClient.PaymentInfo paymentInfo = portOneClient.getPaymentInfo(impUid);
+        PortOneClient.PaymentInfo paymentInfo;
+        try {
+            paymentInfo = portOneClient.getPaymentInfo(impUid);
+        } catch (PortOneApiException e) {
+            refundQuietly(impUid);
+            throw new PortOneApiException(e.getMessage() + " 결제는 자동 환불을 요청했습니다.");
+        }
         if (!"paid".equals(paymentInfo.status())) {
             throw new PaymentVerificationFailedException("결제가 완료되지 않았습니다: " + impUid);
         }
         if (!Long.valueOf(totalPrice).equals(paymentInfo.amount())) {
-            throw new PaymentVerificationFailedException("결제 금액이 일치하지 않습니다.");
+            refundAfterFailure(impUid, AMOUNT_MISMATCH_REFUND_REASON);
+            throw new PaymentVerificationFailedException("결제 금액이 일치하지 않습니다. 결제는 자동으로 환불되었습니다.");
         }
 
         try {
             seatQueryService.validateNotReserved(showtime, seatIds);
             seatHoldService.validateNotHeldByOthers(showtimeId, seatIds, memberId);
         } catch (SeatAlreadyReservedException e) {
-            refundAfterFailure(impUid);
+            refundAfterFailure(impUid, SEAT_FAILURE_REFUND_REASON);
             throw new SeatAlreadyReservedException(e.getMessage() + " 결제는 자동으로 환불되었습니다.");
         } catch (SeatAlreadyHeldException e) {
-            refundAfterFailure(impUid);
+            refundAfterFailure(impUid, SEAT_FAILURE_REFUND_REASON);
             throw new SeatAlreadyHeldException(e.getMessage() + " 결제는 자동으로 환불되었습니다.");
         }
 
@@ -96,8 +112,17 @@ public class ReservationService {
         return saved;
     }
 
-    private void refundAfterFailure(String impUid) {
-        portOneClient.cancelPayment(impUid, "좌석 확보 실패로 인한 자동 환불");
+    private void refundAfterFailure(String impUid, String reason) {
+        portOneClient.cancelPayment(impUid, reason);
+    }
+
+    // 결제 확인 자체가 실패한 경우라 환불도 실패할 수 있다. 원래 오류를 가리지 않도록 환불 실패는 로그만 남긴다
+    private void refundQuietly(String impUid) {
+        try {
+            portOneClient.cancelPayment(impUid, LOOKUP_FAILURE_REFUND_REASON);
+        } catch (RefundFailedException | PortOneApiException e) {
+            log.warn("결제 확인 실패 후 자동 환불도 실패 (impUid={}): {}", impUid, e.getMessage());
+        }
     }
 
     public List<Reservation> getMyReservations(Long memberId) {

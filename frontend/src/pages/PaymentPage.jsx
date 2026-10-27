@@ -16,19 +16,23 @@ function PaymentPage() {
             return
         }
         async function loadPrice() {
-            const response = await apiFetch(
-                `/api/showtimes/${order.showtimeId}/seats/price?seatIds=${order.seatIds.join(',')}`,
-            )
-            if (response.status === 401) {
-                navigate('/login')
-                return
+            try {
+                const response = await apiFetch(
+                    `/api/showtimes/${order.showtimeId}/seats/price?seatIds=${order.seatIds.join(',')}`,
+                )
+                if (response.status === 401) {
+                    navigate('/login')
+                    return
+                }
+                if (!response.ok) {
+                    setMessage('결제 금액을 불러오지 못했어요')
+                    return
+                }
+                const data = await response.json()
+                setAmount(data.totalPrice)
+            } catch {
+                setMessage('서버에 연결할 수 없어요. 잠시 후 다시 시도해 주세요.')
             }
-            if (!response.ok) {
-                setMessage('결제 금액을 불러오지 못했어요')
-                return
-            }
-            const data = await response.json()
-            setAmount(data.totalPrice)
         }
         loadPrice()
     }, [order, navigate])
@@ -90,10 +94,14 @@ function PaymentPage() {
     }
 
     async function handleCancel() {
-        await apiFetch(`/api/showtimes/${order.showtimeId}/seats/hold`, {
-            method: 'DELETE',
-            body: { seatIds: order.seatIds },
-        })
+        try {
+            await apiFetch(`/api/showtimes/${order.showtimeId}/seats/hold`, {
+                method: 'DELETE',
+                body: { seatIds: order.seatIds },
+            })
+        } catch {
+            // 선점 해제에 실패해도 5분 뒤 자동으로 풀리므로 좌석 화면으로는 보낸다
+        }
         navigate(`/showtimes/${order.showtimeId}/seats`)
     }
 

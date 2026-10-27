@@ -27,14 +27,14 @@ public class MovieController {
     @PostMapping
     public ResponseEntity<MovieResponse> register(@Valid @RequestBody MovieRegisterRequest request) {
         Movie movie = movieService.registerMovie(request.getTmdbId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(movie));
+        return ResponseEntity.status(HttpStatus.CREATED).body(MovieResponse.from(movie));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<MovieResponse>> getAll() {
         List<MovieResponse> responses = movieService.getAllMovies().stream()
-                .map(this::toResponse)
+                .map(MovieResponse::from)
                 .toList();
         return ResponseEntity.ok(responses);
     }
@@ -42,19 +42,6 @@ public class MovieController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<MovieResponse> get(@PathVariable Long id) {
-        return ResponseEntity.ok(toResponse(movieService.getMovie(id)));
-    }
-
-    private MovieResponse toResponse(Movie movie) {
-        return new MovieResponse(
-                movie.getId(),
-                movie.getTmdbId(),
-                movie.getTitle(),
-                movie.getPosterUrl(),
-                movie.getOverview(),
-                movie.getReleaseDate(),
-                movie.getRunningTime(),
-                movie.getAgeRating()
-        );
+        return ResponseEntity.ok(MovieResponse.from(movieService.getMovie(id)));
     }
 }
