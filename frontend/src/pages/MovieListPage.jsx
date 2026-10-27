@@ -30,7 +30,7 @@ function MovieListPage() {
             {loading && <p>영화를 불러오는 중...</p>}
             {error && <p>{error}</p>}
             {movies.map(movie => (
-                <MovieCard key={movie.id} title={movie.title} runtime={movie.runningTime} />
+                <MovieCard key={movie.id} id={movie.id} title={movie.title} runtime={movie.runningTime} />
             ))}
         </div>
     )

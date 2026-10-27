@@ -2,6 +2,7 @@ import { Routes, Route, Link } from 'react-router'
 import './App.css'
 import MovieListPage from './pages/MovieListPage'
 import LoginPage from './pages/LoginPage'
+import MovieDetailPage from './pages/MovieDetailPage'
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
       <Routes>
         <Route path="/" element={<MovieListPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/movies/:movieId" element={<MovieDetailPage />} />
       </Routes>
     </div>
   )
