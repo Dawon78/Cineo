@@ -43,4 +43,11 @@ public class ShowtimeController {
                 .toList();
         return ResponseEntity.ok(responses);
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        showtimeService.deleteShowtime(id);
+        return ResponseEntity.noContent().build();
+    }
 }

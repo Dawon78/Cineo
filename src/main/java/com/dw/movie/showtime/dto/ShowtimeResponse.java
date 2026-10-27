@@ -11,7 +11,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ShowtimeResponse {
     private Long id;
+    private Long movieId;
     private String movieTitle;
+    private Long screenId;
     private String screenName;
     private ShowtimeFormat format;
     private LocalDateTime startTime;
@@ -21,7 +23,9 @@ public class ShowtimeResponse {
     public static ShowtimeResponse from(Showtime showtime) {
         return new ShowtimeResponse(
                 showtime.getId(),
+                showtime.getMovie().getId(),
                 showtime.getMovie().getTitle(),
+                showtime.getScreen().getId(),
                 showtime.getScreen().getName(),
                 showtime.getFormat(),
                 showtime.getStartTime(),

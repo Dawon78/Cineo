@@ -12,11 +12,14 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -71,5 +74,21 @@ class SeatHoldServiceTest {
         verify(redisTemplate).delete("seat-hold:1:5");
         verify(redisTemplate, never()).delete("seat-hold:1:6");
         verify(redisTemplate, never()).delete("seat-hold:1:7");
+    }
+
+    @Test
+    void 선점된_좌석이_하나라도_있으면_hasAnyHold가_true다() {
+        given(valueOperations.multiGet(List.of("seat-hold:1:5", "seat-hold:1:6")))
+                .willReturn(Arrays.asList(null, "2"));
+
+        assertTrue(seatHoldService.hasAnyHold(1L, List.of(5L, 6L)));
+    }
+
+    @Test
+    void 선점된_좌석이_없으면_hasAnyHold가_false다() {
+        given(valueOperations.multiGet(List.of("seat-hold:1:5", "seat-hold:1:6")))
+                .willReturn(Arrays.asList(null, null));
+
+        assertFalse(seatHoldService.hasAnyHold(1L, List.of(5L, 6L)));
     }
 }

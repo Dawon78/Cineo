@@ -73,6 +73,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 
+    @ExceptionHandler(ShowtimeNotDeletableException.class)
+    public ResponseEntity<String> handleShowtimeNotDeletable(ShowtimeNotDeletableException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
     @ExceptionHandler(InvalidShowtimeException.class)
     public ResponseEntity<String> handleInvalidShowtime(InvalidShowtimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

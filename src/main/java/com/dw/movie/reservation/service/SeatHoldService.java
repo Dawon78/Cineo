@@ -25,6 +25,16 @@ public class SeatHoldService {
         return Boolean.TRUE.equals(redisTemplate.hasKey(key(showtimeId, seatId)));
     }
 
+    // 좌석 키를 한 번에 조회(multiGet)한다. 하나라도 값이 있으면 누군가 선점 중이다
+    public boolean hasAnyHold(Long showtimeId, List<Long> seatIds) {
+        if (seatIds.isEmpty()) {
+            return false;
+        }
+        List<String> keys = seatIds.stream().map(seatId -> key(showtimeId, seatId)).toList();
+        List<String> holderIds = redisTemplate.opsForValue().multiGet(keys);
+        return holderIds != null && holderIds.stream().anyMatch(holderId -> holderId != null);
+    }
+
     // 모두 잡으면 선점 유지 시간(초)을 돌려준다. 화면 타이머가 이 값을 기준으로 센다
     public long hold(Long showtimeId, List<Long> seatIds, Long memberId) {
         List<String> succeededKeys = new ArrayList<>();
