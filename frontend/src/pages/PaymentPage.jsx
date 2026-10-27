@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { useLocation, useNavigate, Navigate, Link } from 'react-router'
 import { apiFetch } from '../api/client'
 
+function formatRemaining(seconds) {
+    const minutes = Math.floor(seconds / 60)
+    return `${minutes}:${String(seconds % 60).padStart(2, '0')}`
+}
+
 function PaymentPage() {
     const location = useLocation()
     const navigate = useNavigate()
@@ -10,6 +15,20 @@ function PaymentPage() {
     const [paying, setPaying] = useState(false)
     const [message, setMessage] = useState('')
     const [reservation, setReservation] = useState(null)
+    const [now, setNow] = useState(() => Date.now())
+
+    const holdExpiresAt = order?.holdExpiresAt
+    const remainingSeconds = holdExpiresAt ? Math.max(0, Math.ceil((holdExpiresAt - now) / 1000)) : null
+    const holdExpired = remainingSeconds === 0
+
+    useEffect(() => {
+        // 마감됐거나 예매가 끝나면 더 셀 필요가 없다
+        if (!holdExpiresAt || holdExpired || reservation) {
+            return
+        }
+        const timerId = setInterval(() => setNow(Date.now()), 1000)
+        return () => clearInterval(timerId)
+    }, [holdExpiresAt, holdExpired, reservation])
 
     useEffect(() => {
         if (!order) {
@@ -165,10 +184,25 @@ function PaymentPage() {
                         <span>결제 금액</span>
                         <strong>{amount === null ? '계산 중...' : `${amount.toLocaleString()}원`}</strong>
                     </div>
-                    <p className="ticket-hint">좌석은 5분 동안 잡아 둬요. 그 안에 결제를 마쳐 주세요.</p>
+                    {remainingSeconds === null && (
+                        <p className="ticket-hint">좌석은 5분 동안 잡아 둬요. 그 안에 결제를 마쳐 주세요.</p>
+                    )}
+                    {remainingSeconds !== null && !holdExpired && (
+                        <p className={remainingSeconds < 60 ? 'ticket-hint hold-timer hold-timer-urgent' : 'ticket-hint hold-timer'}>
+                            남은 시간 <strong>{formatRemaining(remainingSeconds)}</strong> 안에 결제를 마쳐 주세요.
+                        </p>
+                    )}
+                    {holdExpired && (
+                        // 결제창이 이미 열려 있으면 끊지 않는다. 확정할 때 서버가 좌석을 다시 검사하고, 뺏겼으면 자동 환불한다
+                        <p className="ticket-hint hold-timer-urgent">
+                            {paying
+                                ? '선점 시간이 지났지만 진행 중인 결제는 그대로 처리돼요.'
+                                : '좌석 선점 시간이 끝났어요. 좌석을 다시 골라 주세요.'}
+                        </p>
+                    )}
                     <div className="ticket-actions">
                         <button className="btn" onClick={handleCancel} disabled={paying}>좌석 다시 고르기</button>
-                        <button className="btn btn-primary" onClick={handlePay} disabled={amount === null || paying}>
+                        <button className="btn btn-primary" onClick={handlePay} disabled={amount === null || paying || holdExpired}>
                             {paying ? '결제 진행 중...' : '결제하기'}
                         </button>
                     </div>

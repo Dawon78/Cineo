@@ -101,12 +101,15 @@ function SeatPage() {
             return
         }
 
+        // 서버가 알려준 남은 초를 여기서 마감 시각으로 바꿔 넘긴다. 결제 화면을 새로고침해도 처음부터 다시 세지 않는다
+        const { expiresInSeconds } = await response.json()
         const selectedSeats = seats.filter(seat => selectedIds.includes(seat.seatId))
         navigate('/payment', {
             state: {
                 showtimeId: Number(showtimeId),
                 seatIds: selectedIds,
                 seatLabels: selectedSeats.map(seat => seat.rowLabel + seat.seatNumber),
+                holdExpiresAt: Date.now() + expiresInSeconds * 1000,
             },
         })
     }
