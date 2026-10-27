@@ -1,17 +1,40 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router'
+import { useParams, useSearchParams, Link } from 'react-router'
 import { apiFetch } from '../api/client'
 
 function formatTime(dateTime) {
     return new Date(dateTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
-function formatDay(date) {
-    return new Date(`${date}T00:00:00`).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
+// toISOString()은 UTC 기준이라 한국 시간 오전 9시 전에는 어제 날짜가 나온다. 로컬 날짜로 직접 만든다
+function toLocalDateKey(date) {
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${date.getFullYear()}-${month}-${day}`
+}
+
+function relativeDayLabel(day) {
+    const today = new Date()
+    const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
+    if (day === toLocalDateKey(today)) {
+        return '오늘'
+    }
+    if (day === toLocalDateKey(tomorrow)) {
+        return '내일'
+    }
+    return null
+}
+
+function formatTabDate(day) {
+    const date = new Date(`${day}T00:00:00`)
+    const weekday = date.toLocaleDateString('ko-KR', { weekday: 'short' })
+    return `${date.getMonth() + 1}.${date.getDate()} (${weekday})`
 }
 
 function MovieDetailPage() {
     const { movieId } = useParams()
+    // 고른 날짜를 URL(?date=)에 두면 좌석 화면에 갔다가 뒤로 와도 보던 탭이 그대로 남는다
+    const [searchParams, setSearchParams] = useSearchParams()
     const [movie, setMovie] = useState(null)
     const [showtimes, setShowtimes] = useState([])
     const [error, setError] = useState(null)
@@ -46,6 +69,14 @@ function MovieDetailPage() {
     }
 
     const days = [...new Set(showtimes.map(showtime => showtime.startTime.slice(0, 10)))]
+    // URL에 날짜가 없거나 상영이 없는 날이면 첫날을 보여준다
+    const requestedDay = searchParams.get('date')
+    const selectedDay = days.includes(requestedDay) ? requestedDay : days[0]
+
+    function selectDay(day) {
+        // replace라서 탭을 여러 번 눌러도 뒤로 가기 한 번이면 영화 목록으로 간다
+        setSearchParams({ date: day }, { replace: true })
+    }
 
     return (
         <article className="movie-detail">
@@ -56,12 +87,39 @@ function MovieDetailPage() {
 
                 <h2 className="section-title">상영시간 선택</h2>
                 {showtimes.length === 0 && <p className="notice">상영 예정이 없어요. 다른 영화를 골라 주세요.</p>}
-                {days.map(day => (
-                    <div key={day} className="showtime-day">
-                        <p className="showtime-day-label">{formatDay(day)}</p>
-                        <div className="showtime-list">
+                {days.length > 0 && (
+                    <>
+                        <div className="date-tabs" role="tablist" aria-label="상영 날짜">
+                            {days.map(day => {
+                                const relative = relativeDayLabel(day)
+                                const count = showtimes.filter(showtime => showtime.startTime.startsWith(day)).length
+                                const selected = day === selectedDay
+                                return (
+                                    <button
+                                        key={day}
+                                        type="button"
+                                        role="tab"
+                                        id={`date-tab-${day}`}
+                                        aria-selected={selected}
+                                        aria-controls="showtime-panel"
+                                        className={selected ? 'date-tab date-tab-active' : 'date-tab'}
+                                        onClick={() => selectDay(day)}
+                                    >
+                                        {relative && <span className="date-tab-relative">{relative}</span>}
+                                        <span className="date-tab-date">{formatTabDate(day)}</span>
+                                        <span className="date-tab-count">{count}회</span>
+                                    </button>
+                                )
+                            })}
+                        </div>
+                        <div
+                            id="showtime-panel"
+                            role="tabpanel"
+                            aria-labelledby={`date-tab-${selectedDay}`}
+                            className="showtime-list"
+                        >
                             {showtimes
-                                .filter(showtime => showtime.startTime.startsWith(day))
+                                .filter(showtime => showtime.startTime.startsWith(selectedDay))
                                 .map(showtime => (
                                     <Link
                                         key={showtime.id}
@@ -76,8 +134,8 @@ function MovieDetailPage() {
                                     </Link>
                                 ))}
                         </div>
-                    </div>
-                ))}
+                    </>
+                )}
             </div>
         </article>
     )

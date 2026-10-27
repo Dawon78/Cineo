@@ -178,13 +178,56 @@
   margin-bottom: 16px;
 }
 
-.showtime-day + .showtime-day {
-  margin-top: 20px;
+/* 상영 날짜 탭: 넘치면 가로로 스크롤 */
+.date-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 2px 2px 6px;
+  overflow-x: auto;
 }
 
-.showtime-day-label {
-  margin-bottom: 10px;
-  font-weight: 500;
+.date-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex-shrink: 0;
+  min-width: 96px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+}
+
+.date-tab:hover {
+  border-color: var(--ink);
+}
+
+.date-tab-active,
+.date-tab-active:hover {
+  border-color: var(--marquee);
+  background: var(--marquee);
+  color: var(--marquee-ink);
+}
+
+.date-tab-relative,
+.date-tab-count {
+  font-size: 0.78rem;
+}
+
+.date-tab-relative,
+.date-tab-date {
+  font-weight: 600;
+}
+
+.date-tab-count {
+  color: var(--muted);
+}
+
+.date-tab-active .date-tab-count {
+  color: var(--marquee-ink);
 }
 
 .showtime-list {
