@@ -19,6 +19,6 @@ public class MemberService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberNotFoundException("해당 회원을 찾을 수 없습니다."));
         return new MemberInfoResponse(member.getEmail(), member.getName(), member.getTier(),
-                member.getTotalSpent(), member.getPoints());
+                member.getTotalSpent(), member.getPoints(), member.getRole());
     }
 }

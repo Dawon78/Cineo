@@ -1,5 +1,6 @@
 package com.dw.movie.member.dto;
 
+import com.dw.movie.member.entity.Role;
 import com.dw.movie.member.entity.Tier;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,4 +13,5 @@ public class MemberInfoResponse {
     private Tier tier;
     private Long totalSpent;
     private Long points;
+    private Role role;
 }
