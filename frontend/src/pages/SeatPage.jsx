@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { clearTokens } from '../auth'
+import { apiFetch } from '../api/client'
 import Seat from '../components/Seat'
 
 const MAX_SEATS = 10
@@ -17,12 +17,8 @@ function SeatPage() {
 
     useEffect(() => {
         async function loadSeats() {
-            const token = localStorage.getItem('accessToken')
-            const response = await fetch(`http://localhost:8082/api/showtimes/${showtimeId}/seats`, {
-                headers: { Authorization: `Bearer ${token}` },
-            })
+            const response = await apiFetch(`/api/showtimes/${showtimeId}/seats`)
             if (response.status === 401) {
-                clearTokens()
                 navigate('/login')
                 return
             }
@@ -40,10 +36,8 @@ function SeatPage() {
             return
         }
         async function loadPrice() {
-            const token = localStorage.getItem('accessToken')
-            const response = await fetch(
-                `http://localhost:8082/api/showtimes/${showtimeId}/seats/price?seatIds=${selectedIds.join(',')}`,
-                { headers: { Authorization: `Bearer ${token}` } },
+            const response = await apiFetch(
+                `/api/showtimes/${showtimeId}/seats/price?seatIds=${selectedIds.join(',')}`,
             )
             if (response.ok) {
                 const data = await response.json()
@@ -64,16 +58,13 @@ function SeatPage() {
     async function handleReserve() {
         setHolding(true)
         setHoldMessage('')
-        const token = localStorage.getItem('accessToken')
-        const response = await fetch(`http://localhost:8082/api/showtimes/${showtimeId}/seats/hold`, {
+        const response = await apiFetch(`/api/showtimes/${showtimeId}/seats/hold`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ seatIds: selectedIds }),
+            body: { seatIds: selectedIds },
         })
         setHolding(false)
 
         if (response.status === 401) {
-            clearTokens()
             navigate('/login')
             return
         }

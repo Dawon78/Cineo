@@ -1,13 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate, Navigate, Link } from 'react-router'
-import { clearTokens } from '../auth'
-
-function authHeaders() {
-    return {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-    }
-}
+import { apiFetch } from '../api/client'
 
 function PaymentPage() {
     const location = useLocation()
@@ -23,12 +16,10 @@ function PaymentPage() {
             return
         }
         async function loadPrice() {
-            const response = await fetch(
-                `http://localhost:8082/api/showtimes/${order.showtimeId}/seats/price?seatIds=${order.seatIds.join(',')}`,
-                { headers: authHeaders() },
+            const response = await apiFetch(
+                `/api/showtimes/${order.showtimeId}/seats/price?seatIds=${order.seatIds.join(',')}`,
             )
             if (response.status === 401) {
-                clearTokens()
                 navigate('/login')
                 return
             }
@@ -48,10 +39,9 @@ function PaymentPage() {
 
     async function confirmReservation(impUid) {
         try {
-            const response = await fetch('http://localhost:8082/api/reservations', {
+            const response = await apiFetch('/api/reservations', {
                 method: 'POST',
-                headers: authHeaders(),
-                body: JSON.stringify({ showtimeId: order.showtimeId, seatIds: order.seatIds, impUid }),
+                body: { showtimeId: order.showtimeId, seatIds: order.seatIds, impUid },
             })
             if (!response.ok) {
                 setMessage(await response.text())
@@ -100,10 +90,9 @@ function PaymentPage() {
     }
 
     async function handleCancel() {
-        await fetch(`http://localhost:8082/api/showtimes/${order.showtimeId}/seats/hold`, {
+        await apiFetch(`/api/showtimes/${order.showtimeId}/seats/hold`, {
             method: 'DELETE',
-            headers: authHeaders(),
-            body: JSON.stringify({ seatIds: order.seatIds }),
+            body: { seatIds: order.seatIds },
         })
         navigate(`/showtimes/${order.showtimeId}/seats`)
     }

@@ -1,12 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router'
-import { clearTokens } from '../auth'
+import { apiFetch } from '../api/client'
 
 const TIER_LABELS = { BASIC: '베이직', SILVER: '실버', GOLD: '골드', VIP: 'VIP' }
-
-function authHeaders() {
-    return { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
-}
 
 function MyPage() {
     const navigate = useNavigate()
@@ -19,11 +15,10 @@ function MyPage() {
     useEffect(() => {
         async function load() {
             const [memberRes, reservationRes] = await Promise.all([
-                fetch('http://localhost:8082/api/members/me', { headers: authHeaders() }),
-                fetch('http://localhost:8082/api/reservations/me', { headers: authHeaders() }),
+                apiFetch('/api/members/me'),
+                apiFetch('/api/reservations/me'),
             ])
             if (memberRes.status === 401 || reservationRes.status === 401) {
-                clearTokens()
                 navigate('/login')
                 return
             }
@@ -43,11 +38,12 @@ function MyPage() {
             return
         }
         setCancellingId(reservation.id)
-        const response = await fetch(`http://localhost:8082/api/reservations/${reservation.id}`, {
-            method: 'DELETE',
-            headers: authHeaders(),
-        })
+        const response = await apiFetch(`/api/reservations/${reservation.id}`, { method: 'DELETE' })
         setCancellingId(null)
+        if (response.status === 401) {
+            navigate('/login')
+            return
+        }
         if (!response.ok) {
             window.alert(await response.text())
             return

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import MovieCard from '../components/MovieCard'
+import { apiFetch } from '../api/client'
 
 function MovieListPage() {
     const [movies, setMovies] = useState([])
@@ -9,7 +10,7 @@ function MovieListPage() {
     useEffect(() => {
         async function loadMovies() {
             try {
-                const response = await fetch('http://localhost:8082/api/movies')
+                const response = await apiFetch('/api/movies')
                 if (!response.ok) {
                     throw new Error('영화 목록을 불러오지 못했어요')
                 }

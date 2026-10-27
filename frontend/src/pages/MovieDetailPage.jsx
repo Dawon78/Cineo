@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router'
+import { apiFetch } from '../api/client'
 
 function formatTime(dateTime) {
     return new Date(dateTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })
@@ -18,13 +19,13 @@ function MovieDetailPage() {
     useEffect(() => {
         async function load() {
             try {
-                const movieRes = await fetch(`http://localhost:8082/api/movies/${movieId}`)
+                const movieRes = await apiFetch(`/api/movies/${movieId}`)
                 if (!movieRes.ok) {
                     throw new Error(movieRes.status === 404 ? '영화를 찾을 수 없어요' : '영화 정보를 불러오지 못했어요')
                 }
                 setMovie(await movieRes.json())
 
-                const showtimeRes = await fetch(`http://localhost:8082/api/movies/${movieId}/showtimes`)
+                const showtimeRes = await apiFetch(`/api/movies/${movieId}/showtimes`)
                 if (!showtimeRes.ok) {
                     throw new Error('상영시간을 불러오지 못했어요')
                 }

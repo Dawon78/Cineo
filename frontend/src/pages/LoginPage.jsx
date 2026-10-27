@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router'
+import { apiFetch } from '../api/client'
+import { saveTokens } from '../auth'
 
 function LoginPage() {
     const location = useLocation()
@@ -14,10 +16,9 @@ function LoginPage() {
 
         let response
         try {
-            response = await fetch('http://localhost:8082/api/auth/login', {
+            response = await apiFetch('/api/auth/login', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
+                body: { email, password },
             })
         } catch {
             setMessage('서버에 연결할 수 없어요. 잠시 후 다시 시도해 주세요.')
@@ -31,8 +32,7 @@ function LoginPage() {
         }
 
         const data = await response.json()
-        localStorage.setItem('accessToken', data.accessToken)
-        localStorage.setItem('refreshToken', data.refreshToken)
+        saveTokens(data.accessToken, data.refreshToken)
         navigate('/')
     }
 

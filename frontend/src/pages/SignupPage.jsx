@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router'
+import { apiFetch } from '../api/client'
 
 const MIN_PASSWORD_LENGTH = 8
 
@@ -25,10 +26,9 @@ function SignupPage() {
         setMessage('')
         let response
         try {
-            response = await fetch('http://localhost:8082/api/auth/signup', {
+            response = await apiFetch('/api/auth/signup', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, name, phone }),
+                body: { email, password, name, phone },
             })
         } catch {
             setMessage('서버에 연결할 수 없어요. 잠시 후 다시 시도해 주세요.')

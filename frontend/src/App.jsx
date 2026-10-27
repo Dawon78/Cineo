@@ -7,20 +7,17 @@ import SeatPage from './pages/SeatPage'
 import PaymentPage from './pages/PaymentPage'
 import SignupPage from './pages/SignupPage'
 import MyPage from './pages/MyPage'
-import { clearTokens } from './auth'
+import { getAccessToken, clearTokens } from './auth'
+import { apiFetch } from './api/client'
 
 function App() {
   useLocation()
   const navigate = useNavigate()
-  const loggedIn = localStorage.getItem('accessToken') !== null
+  const loggedIn = getAccessToken() !== null
 
   async function handleLogout() {
-    const token = localStorage.getItem('accessToken')
     try {
-      await fetch('http://localhost:8082/api/auth/logout', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      await apiFetch('/api/auth/logout', { method: 'POST' })
     } catch {
       // 서버가 꺼져 있어도 브라우저의 토큰은 지워서 로그아웃 상태로 만든다
     }
