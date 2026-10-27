@@ -8,6 +8,10 @@ export function getAccessToken() {
   return localStorage.getItem('accessToken')
 }
 
+export function isLoggedIn() {
+  return getAccessToken() !== null
+}
+
 export function getRefreshToken() {
   return localStorage.getItem('refreshToken')
 }
