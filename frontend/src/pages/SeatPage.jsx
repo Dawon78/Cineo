@@ -14,26 +14,30 @@ function SeatPage() {
     const [error, setError] = useState(null)
     const [holdMessage, setHoldMessage] = useState('')
     const [holding, setHolding] = useState(false)
+    const [reloadKey, setReloadKey] = useState(0)
 
     useEffect(() => {
         async function loadSeats() {
             try {
                 const response = await apiFetch(`/api/showtimes/${showtimeId}/seats`)
                 if (response.status === 401) {
-                    navigate('/login')
+                    navigate('/login', { state: { from: `/showtimes/${showtimeId}/seats` } })
                     return
                 }
                 if (!response.ok) {
                     setError('좌석 정보를 불러오지 못했어요')
                     return
                 }
-                setSeats(await response.json())
+                const data = await response.json()
+                setSeats(data)
+                // 다시 불러왔을 때 그사이 다른 사람이 잡은 좌석은 선택에서 뺀다
+                setSelectedIds(ids => ids.filter(id => data.some(seat => seat.seatId === id && seat.status === 'AVAILABLE')))
             } catch {
                 setError('서버에 연결할 수 없어요. 잠시 후 다시 시도해 주세요.')
             }
         }
         loadSeats()
-    }, [showtimeId, navigate])
+    }, [showtimeId, navigate, reloadKey])
 
     useEffect(() => {
         if (selectedIds.length === 0) {
@@ -87,11 +91,13 @@ function SeatPage() {
         }
 
         if (response.status === 401) {
-            navigate('/login')
+            navigate('/login', { state: { from: `/showtimes/${showtimeId}/seats` } })
             return
         }
         if (!response.ok) {
-            setHoldMessage(await response.text())
+            // 다른 사람이 먼저 잡은 좌석이 있으면 좌석판이 옛날 상태라서, 최신 현황을 다시 불러온다
+            setHoldMessage(`${await response.text()} 좌석 현황을 다시 불러왔어요.`)
+            setReloadKey(key => key + 1)
             return
         }
 

@@ -21,7 +21,8 @@ function PaymentPage() {
                     `/api/showtimes/${order.showtimeId}/seats/price?seatIds=${order.seatIds.join(',')}`,
                 )
                 if (response.status === 401) {
-                    navigate('/login')
+                    // 결제 화면은 좌석 정보를 화면 이동으로만 받아서, 로그인 후에는 좌석 화면부터 다시 시작한다
+                    navigate('/login', { state: { from: `/showtimes/${order.showtimeId}/seats` } })
                     return
                 }
                 if (!response.ok) {

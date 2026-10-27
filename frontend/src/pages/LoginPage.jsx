@@ -33,7 +33,8 @@ function LoginPage() {
 
         const data = await response.json()
         saveTokens(data.accessToken, data.refreshToken)
-        navigate('/')
+        // 좌석 화면 등에서 로그인하러 왔으면 그 화면으로 돌려보낸다. replace라서 뒤로 가기를 눌러도 로그인 화면이 다시 나오지 않는다
+        navigate(location.state?.from ?? '/', { replace: true })
     }
 
     return (

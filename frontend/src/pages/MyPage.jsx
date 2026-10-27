@@ -20,7 +20,7 @@ function MyPage() {
                     apiFetch('/api/reservations/me'),
                 ])
                 if (memberRes.status === 401 || reservationRes.status === 401) {
-                    navigate('/login')
+                    navigate('/login', { state: { from: '/mypage' } })
                     return
                 }
                 if (!memberRes.ok || !reservationRes.ok) {
@@ -53,7 +53,7 @@ function MyPage() {
             setCancellingId(null)
         }
         if (response.status === 401) {
-            navigate('/login')
+            navigate('/login', { state: { from: '/mypage' } })
             return
         }
         if (!response.ok) {
