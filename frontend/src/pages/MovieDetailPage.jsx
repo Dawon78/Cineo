@@ -52,7 +52,7 @@ function MovieDetailPage() {
             <img className="movie-detail-poster" src={movie.posterUrl} alt={`${movie.title} 포스터`} />
             <div>
                 <h1 className="movie-detail-title">{movie.title}</h1>
-                <p className="movie-overview">{movie.overView}</p>
+                <p className="movie-overview">{movie.overview}</p>
 
                 <h2 className="section-title">상영시간 선택</h2>
                 {showtimes.length === 0 && <p className="notice">상영 예정이 없어요. 다른 영화를 골라 주세요.</p>}

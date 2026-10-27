@@ -33,7 +33,7 @@ public class Member {
     @Enumerated(EnumType.STRING)
     private Tier tier = Tier.BASIC;
 
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 
     private String refreshToken;
 
@@ -46,7 +46,7 @@ public class Member {
         this.tier = Tier.BASIC;
         this.totalSpent = 0L;
         this.points = 0L;
-        this.createAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
     public void updateRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;

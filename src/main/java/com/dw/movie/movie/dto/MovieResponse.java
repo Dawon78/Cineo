@@ -10,10 +10,10 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class MovieResponse {
     private long id;
-    private long tmdbid;
+    private long tmdbId;
     private String title;
     private String posterUrl;
-    private String overView;
+    private String overview;
     private LocalDate releaseDate;
     private Integer runningTime;
     private String ageRating;
