@@ -5,11 +5,14 @@ import com.dw.movie.payment.exception.PortOneApiException;
 import com.dw.movie.payment.exception.RefundFailedException;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
@@ -17,13 +20,18 @@ import java.time.Duration;
 @Component
 public class PortOneClient {
 
+    private static final Logger log = LoggerFactory.getLogger(PortOneClient.class);
+
     private final RestClient restClient;
     private final String apiKey;
     private final String apiSecret;
+    private final boolean includeSandbox;
 
-    public PortOneClient(@Value("${portone.api-key}") String apiKey, @Value("${portone.api-secret}") String apiSecret) {
+    public PortOneClient(@Value("${portone.api-key}") String apiKey, @Value("${portone.api-secret}") String apiSecret,
+                         @Value("${portone.include-sandbox:false}") boolean includeSandbox) {
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
+        this.includeSandbox = includeSandbox;
         HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
         JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
         requestFactory.setReadTimeout(Duration.ofSeconds(5));
@@ -39,11 +47,18 @@ public class PortOneClient {
         PaymentApiResponse response;
         try {
             response = restClient.get()
-                    .uri("/payments/{impUid}", impUid)
+                    .uri("/payments/{impUid}?include_sandbox={includeSandbox}", impUid, includeSandbox)
                     .header("Authorization", accessToken)
                     .retrieve()
                     .body(PaymentApiResponse.class);
+        } catch (RestClientResponseException e) {
+            log.warn("포트원 결제 조회 실패 (impUid={}, status={}): {}", impUid, e.getStatusCode(), e.getResponseBodyAsString());
+            if (e.getStatusCode().value() == 404) {
+                throw new PaymentVerificationFailedException("포트원에서 결제 정보를 찾을 수 없습니다: " + impUid);
+            }
+            throw new PortOneApiException("포트원 결제 조회에 실패했습니다.");
         } catch (RestClientException e) {
+            log.warn("포트원 결제 조회 실패 (impUid={}): {}", impUid, e.getMessage());
             throw new PortOneApiException("포트원 결제 조회에 실패했습니다.");
         }
 

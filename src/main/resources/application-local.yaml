@@ -1,0 +1,5 @@
+# local 프로필(SPRING_PROFILES_ACTIVE=local)에서만 적용되는 개발용 설정
+
+portone:
+  # 테스트 채널 결제(sandbox)도 결제 검증에서 조회되게 함. 운영에서는 켜면 안 됨
+  include-sandbox: true
