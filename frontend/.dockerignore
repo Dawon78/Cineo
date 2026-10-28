@@ -1,0 +1,4 @@
+# 도커 빌드에 보내지 않을 것들 (컨테이너 안에서 새로 설치하고 빌드한다)
+node_modules
+dist
+.env.local
