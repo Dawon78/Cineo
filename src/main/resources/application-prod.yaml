@@ -1,0 +1,21 @@
+# prod 프로필(SPRING_PROFILES_ACTIVE=prod)에서만 적용되는 운영용 설정. 도커 컴포즈 안에서 실행된다
+
+spring:
+  datasource:
+    # 도커 안에서는 localhost가 아니라 컴포즈 서비스 이름(postgres)으로 DB를 찾는다
+    url: jdbc:postgresql://postgres:5432/movie
+  data:
+    redis:
+      host: redis
+  jpa:
+    hibernate:
+      # 마이그레이션 도구(Flyway) 없이 빈 DB에 테이블을 만들려고 update로 둔다 (알려진 한계)
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+portone:
+  # 포트폴리오 시연이라 PortOne 테스트 채널로 결제한다. 실제 서비스라면 false
+  include-sandbox: true
