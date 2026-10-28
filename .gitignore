@@ -39,3 +39,6 @@ out/
 ### Personal notes ###
 scratch/
 docs/study/
+
+### Secrets ###
+.env
