@@ -98,11 +98,15 @@ function PaymentPage() {
             amount,
             buyer_name: 'Cineo 회원',
             buyer_tel: '01000000000',
+            m_redirect_url: `${window.location.origin}/payment/complete`,
         }
         const channelKey = import.meta.env.VITE_PORTONE_CHANNEL_KEY
         if (channelKey) {
             params.channelKey = channelKey
         }
+
+        // 모바일은 결제창이 페이지 이동으로 열려 이 화면의 상태가 사라지므로, 돌아와서 예매를 확정할 수 있게 주문을 저장해 둔다
+        sessionStorage.setItem('pendingOrder', JSON.stringify({ showtimeId: order.showtimeId, seatIds: order.seatIds }))
 
         window.IMP.request_pay(params, (rsp) => {
             if (!rsp.success) {

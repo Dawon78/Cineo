@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage'
 import MovieDetailPage from './pages/MovieDetailPage'
 import SeatPage from './pages/SeatPage'
 import PaymentPage from './pages/PaymentPage'
+import PaymentCompletePage from './pages/PaymentCompletePage'
 import SignupPage from './pages/SignupPage'
 import MyPage from './pages/MyPage'
 import ReservationDetailPage from './pages/ReservationDetailPage'
@@ -15,6 +16,7 @@ import AdminScreensPage from './pages/admin/AdminScreensPage'
 import AdminShowtimesPage from './pages/admin/AdminShowtimesPage'
 import { isLoggedIn, clearTokens, subscribeAuth } from './auth'
 import { apiFetch } from './api/client'
+
 
 function App() {
   const navigate = useNavigate()
@@ -87,6 +89,7 @@ function App() {
           <Route path="/movies/:movieId" element={<MovieDetailPage />} />
           <Route path="/showtimes/:showtimeId/seats" element={<SeatPage />} />
           <Route path="/payment" element={<PaymentPage />} />
+          <Route path="/payment/complete" element={<PaymentCompletePage />} />
           <Route path="/reservations/:reservationId" element={<ReservationDetailPage />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Navigate to="movies" replace />} />
