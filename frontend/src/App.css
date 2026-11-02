@@ -34,6 +34,7 @@
   background: none;
   text-decoration: none;
   color: #d8dce6;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -42,6 +43,33 @@
 .nav-button:hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.1);
+}
+
+/* 휴대폰: 메뉴가 로고 옆에 다 들어가지 않아서 로고 아래 한 줄로 내린다 */
+@media (max-width: 640px) {
+  .site-header {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .logo {
+    font-size: 1.4rem;
+  }
+
+  .site-nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .site-nav a,
+  .nav-button {
+    padding: 6px 8px;
+    font-size: 0.9rem;
+  }
+
+  .page-title {
+    font-size: 1.6rem;
+  }
 }
 
 .page {
@@ -309,6 +337,16 @@
 }
 
 @media (max-width: 640px) {
+  /* 포스터가 한 줄에 한 장이면 너무 커서 두 장씩 놓는다 */
+  .movie-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 12px;
+  }
+
+  .movie-card-title {
+    font-size: 0.95rem;
+  }
+
   .movie-detail {
     grid-template-columns: 1fr;
     gap: 24px;
@@ -316,6 +354,17 @@
 
   .movie-detail-poster {
     max-width: 200px;
+  }
+
+  /* 상영시간 버튼을 한 줄에 세 개씩 같은 폭으로 */
+  .showtime-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .showtime-chip {
+    min-width: 0;
+    padding: 10px;
   }
 }
 
@@ -342,10 +391,16 @@
 }
 
 .seat-map {
-  --seat: clamp(24px, 7.2vw, 36px);
+  /* 좁은 휴대폰(320px)에서도 한 줄 10석이 들어가는 크기 */
+  --seat: clamp(22px, 7vw, 36px);
   display: flex;
   flex-direction: column;
   gap: 6px;
+  /* 좌석이 많은 상영관은 화면보다 넓어질 수 있어서, 잘리지 않고 옆으로 밀어 볼 수 있게 한다 */
+  max-width: 100%;
+  overflow-x: auto;
+  /* 선택한 좌석이 위로 2px 떠오를 때 잘리지 않게 여유를 둔다 */
+  padding: 4px 0;
 }
 
 .seat-row {
@@ -362,6 +417,8 @@
 }
 
 .seat {
+  /* 자리가 모자라도 좌석이 찌그러지지 않고, 대신 좌석표가 옆으로 스크롤되게 */
+  flex-shrink: 0;
   width: var(--seat);
   height: var(--seat);
   padding: 0;
@@ -396,7 +453,9 @@
 
 .seat-legend {
   display: flex;
-  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 20px;
   margin-top: 28px;
   color: var(--muted);
   font-size: 0.85rem;
@@ -438,6 +497,11 @@
   padding: 14px clamp(16px, 4vw, 40px);
   background: var(--surface);
   border-top: 1px solid var(--line);
+}
+
+/* 고른 좌석 글자가 길어져도 예매 버튼은 줄어들지 않게 */
+.summary-bar .btn {
+  flex-shrink: 0;
 }
 
 .summary-count {
@@ -807,6 +871,41 @@
 .auth-switch a {
   color: var(--ink);
   font-weight: 600;
+}
+
+/* 휴대폰: 결제 티켓, 마이페이지, 로그인 카드의 안쪽 여백을 줄여 내용 들어갈 자리를 넓힌다 */
+@media (max-width: 640px) {
+  .ticket-main {
+    padding: 22px 20px 18px;
+  }
+
+  .ticket-stub {
+    padding: 18px 20px 22px;
+  }
+
+  .ticket-movie {
+    font-size: 1.6rem;
+  }
+
+  .ticket-actions .btn {
+    padding: 0 14px;
+  }
+
+  .member-summary {
+    padding: 20px;
+  }
+
+  .member-stats {
+    gap: 20px;
+  }
+
+  .reservation-item {
+    padding: 16px;
+  }
+
+  .auth-card {
+    padding: 24px 20px;
+  }
 }
 
 /* 관리자 */
