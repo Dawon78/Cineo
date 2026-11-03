@@ -392,8 +392,9 @@
 }
 
 .seat-map {
-  /* 좁은 휴대폰(320px)에서도 한 줄 10석이 들어가는 크기 */
-  --seat: clamp(22px, 7vw, 36px);
+  /* 화면 너비를 한 줄 좌석 수(--cols, SeatPage에서 넘김)로 나눈 크기.
+     빼는 값: 페이지 좌우 여백(.page), 여유 4px, 행 이름 22px, 좌석마다 간격 4px */
+  --seat: clamp(18px, calc((100vw - clamp(32px, 8vw, 80px) - 4px - 22px - var(--cols, 10) * 4px) / var(--cols, 10)), 36px);
   display: flex;
   flex-direction: column;
   gap: 6px;

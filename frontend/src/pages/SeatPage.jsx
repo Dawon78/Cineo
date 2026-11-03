@@ -119,6 +119,8 @@ function SeatPage() {
     }
 
     const rows = [...new Set(seats.map(seat => seat.rowLabel))]
+    // 한 줄 좌석 수를 CSS에 넘겨 좌석 크기를 정한다. 고정 크기면 좌석이 많은 상영관이 휴대폰 화면을 넘친다
+    const columns = Math.max(1, ...rows.map(row => seats.filter(seat => seat.rowLabel === row).length))
     const selectedLabels = seats
         .filter(seat => selectedIds.includes(seat.seatId))
         .map(seat => seat.rowLabel + seat.seatNumber)
@@ -128,7 +130,7 @@ function SeatPage() {
             <h1 className="page-title">좌석 선택</h1>
             <div className="screen">SCREEN</div>
 
-            <div className="seat-map">
+            <div className="seat-map" style={{ '--cols': columns }}>
                 {rows.map(row => (
                     <div key={row} className="seat-row">
                         <span className="row-label">{row}</span>
