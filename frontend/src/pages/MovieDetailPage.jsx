@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router'
 import { apiFetch } from '../api/client'
 
+// 실제 영화관처럼 오늘부터 2주 치 날짜만 탭으로 보여준다. 상영이 더 먼 날까지 등록돼 있어도 탭이 끝없이 늘어나지 않는다
+const DATE_TAB_DAYS = 14
+
 function formatTime(dateTime) {
     return new Date(dateTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })
 }
@@ -23,6 +26,11 @@ function relativeDayLabel(day) {
         return '내일'
     }
     return null
+}
+
+function lastTabDay() {
+    const today = new Date()
+    return toLocalDateKey(new Date(today.getFullYear(), today.getMonth(), today.getDate() + DATE_TAB_DAYS - 1))
 }
 
 function formatTabDate(day) {
@@ -68,7 +76,9 @@ function MovieDetailPage() {
         return <p className="notice">불러오는 중...</p>
     }
 
-    const days = [...new Set(showtimes.map(showtime => showtime.startTime.slice(0, 10)))]
+    // 날짜 문자열(YYYY-MM-DD)은 글자 순서가 곧 날짜 순서라 문자열 비교로 자를 수 있다
+    const lastDay = lastTabDay()
+    const days = [...new Set(showtimes.map(showtime => showtime.startTime.slice(0, 10)))].filter(day => day <= lastDay)
     // URL에 날짜가 없거나 상영이 없는 날이면 첫날을 보여준다
     const requestedDay = searchParams.get('date')
     const selectedDay = days.includes(requestedDay) ? requestedDay : days[0]
@@ -86,7 +96,7 @@ function MovieDetailPage() {
                 <p className="movie-overview">{movie.overview}</p>
 
                 <h2 className="section-title">상영시간 선택</h2>
-                {showtimes.length === 0 && <p className="notice">상영 예정이 없어요. 다른 영화를 골라 주세요.</p>}
+                {days.length === 0 && <p className="notice">상영 예정이 없어요. 다른 영화를 골라 주세요.</p>}
                 {days.length > 0 && (
                     <>
                         <div className="date-tabs" role="tablist" aria-label="상영 날짜">

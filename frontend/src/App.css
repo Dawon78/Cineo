@@ -223,7 +223,8 @@
 /* 영화 상세 */
 .movie-detail {
   display: grid;
-  grid-template-columns: minmax(0, 260px) 1fr;
+  /* 1fr은 내용보다 좁아지지 않아서, 날짜 탭이 많으면 칸이 탭 길이만큼 늘어나 페이지가 가로로 넘친다 */
+  grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
   gap: 40px;
   align-items: start;
 }
@@ -348,7 +349,7 @@
   }
 
   .movie-detail {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 24px;
   }
 
