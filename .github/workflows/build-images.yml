@@ -58,3 +58,49 @@ jobs:
           tags: |
             ghcr.io/dawon78/cineo-backend:latest
             ghcr.io/dawon78/cineo-backend:${{ github.sha }}
+            
+
+  deploy:
+    # 두 이미지가 모두 GHCR에 올라간 다음에 서버에 배포한다
+    needs: [frontend, backend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 이 컴퓨터의 공인 IP 확인
+        id: ip
+        run: echo "ip=$(curl -s https://checkip.amazonaws.com)" >> "$GITHUB_OUTPUT"
+
+      - name: AWS 로그인
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-2
+
+      - name: 보안 그룹에 이 IP만 SSH 잠깐 열기
+        run: >
+          aws ec2 authorize-security-group-ingress
+          --group-id ${{ vars.AWS_SG_ID }}
+          --protocol tcp --port 22
+          --cidr ${{ steps.ip.outputs.ip }}/32
+
+      - name: 서버에서 새 이미지 받아 교체
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ vars.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd ~/Cineo
+            git pull
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
+
+      - name: 열었던 SSH 다시 닫기
+        if: always()
+        run: >
+          aws ec2 revoke-security-group-ingress
+          --group-id ${{ vars.AWS_SG_ID }}
+          --protocol tcp --port 22
+          --cidr ${{ steps.ip.outputs.ip }}/32
