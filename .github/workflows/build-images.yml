@@ -35,3 +35,26 @@ jobs:
           build-args: |
             VITE_PORTONE_IMP_CODE=${{ vars.VITE_PORTONE_IMP_CODE }}
             VITE_PORTONE_CHANNEL_KEY=${{ vars.VITE_PORTONE_CHANNEL_KEY }}
+  
+
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 받기
+        uses: actions/checkout@v4
+
+      - name: GHCR 로그인
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 백엔드 이미지 빌드 후 업로드
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/dawon78/cineo-backend:latest
+            ghcr.io/dawon78/cineo-backend:${{ github.sha }}
