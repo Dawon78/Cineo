@@ -20,6 +20,8 @@ services:
     restart: unless-stopped
 
   backend:
+    # 서버는 GitHub Actions가 만든 이미지를 받아 쓰고(docker compose pull), 로컬은 --build로 직접 빌드할 수 있다
+    image: ghcr.io/dawon78/cineo-backend:latest
     build: .
     environment:
       TZ: Asia/Seoul
@@ -38,6 +40,7 @@ services:
     restart: unless-stopped
 
   frontend:
+    image: ghcr.io/dawon78/cineo-frontend:latest
     build:
       context: ./frontend
       args:
